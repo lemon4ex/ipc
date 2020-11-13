@@ -1,0 +1,5 @@
+#!/bin/sh
+
+/bin/launchctl unload /Library/LaunchDaemons/net.ymlab.dev.daemon.plist
+
+exit 0

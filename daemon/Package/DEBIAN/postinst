@@ -1,0 +1,14 @@
+#!/bin/sh
+
+if [[ $1 == upgrade ]]; then
+	/bin/launchctl unload /Library/LaunchDaemons/net.ymlab.dev.daemon.plist
+fi
+
+chown root:wheel /usr/bin/daemon
+chmod 755 /usr/bin/daemon
+chown root:wheel /Library/LaunchDaemons/net.ymlab.dev.daemon.plist
+chmod 644 /Library/LaunchDaemons/net.ymlab.dev.daemon.plist
+
+/bin/launchctl load /Library/LaunchDaemons/net.ymlab.dev.daemon.plist
+
+exit 0
