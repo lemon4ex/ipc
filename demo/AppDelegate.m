@@ -31,6 +31,7 @@ static void daemon_peer_event_handler(xpc_lite_connection_t peer, xpc_lite_objec
         xpc_lite_object_t dictionary = xpc_lite_dictionary_create(NULL, NULL, 0);
         xpc_lite_dictionary_set_double(dictionary, "result", value1+value2);
         xpc_lite_connection_send_message(peer, dictionary);
+        xpc_lite_release(dictionary);
     }
 }
 
@@ -91,6 +92,7 @@ static void daemon_event_handler(xpc_lite_connection_t peer)
         xpc_lite_dictionary_set_double(dictionary, "value1", 1.0);
         xpc_lite_dictionary_set_double(dictionary, "value2", 2.0);
         xpc_lite_connection_send_message(client, dictionary);
+        xpc_lite_release(dictionary);
     });
     dispatch_resume(timer);
     

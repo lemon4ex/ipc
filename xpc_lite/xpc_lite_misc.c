@@ -82,6 +82,7 @@ xpc_lite_dictionary_destroy(struct xpc_lite_object *dict)
 
 	TAILQ_FOREACH_SAFE(p, head, xo_link, ptmp) {
 		TAILQ_REMOVE(head, p, xo_link);
+        free(p->key);
 		xpc_lite_object_destroy(p->value);
 		free(p);
 	}
@@ -398,9 +399,11 @@ xpc_lite_pipe_send(xpc_lite_object_t xobj, uint64_t id, xpc_lite_port_t local, x
 
 	if (transport->xt_send(local, remote, buf, size, NULL, 0) != 0) {
 		debugf("transport send function failed: %s", strerror(errno));
+        free(buf);
 		return (-1);
 	}
-
+    
+    free(buf);
 	return (0);
 }
 

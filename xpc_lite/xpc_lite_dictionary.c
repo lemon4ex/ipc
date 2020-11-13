@@ -175,9 +175,9 @@ xpc_lite_dictionary_create(const char * const *keys, const xpc_lite_object_t *va
 
 	xo = _xpc_lite_prim_create(_XPC_TYPE_DICTIONARY, val, count);
 	
-	for (i = 0; i < count; i++)
-		xpc_lite_dictionary_set_value(xo, keys[i], values[i]);
-	
+    for (i = 0; i < count; i++){
+        xpc_lite_dictionary_set_value(xo, strdup(keys[i]), values[i]);
+    }
 	return (xo);
 }
 
@@ -241,7 +241,7 @@ xpc_lite_dictionary_copy_mach_send(xpc_lite_object_t xdict, const char *key)
 #endif
 
 void
-xpc_lite_dictionary_set_value(xpc_lite_object_t xdict, const char *key,
+xpc_lite_dictionary_set_value(xpc_lite_object_t xdict, char *key,
         xpc_lite_object_t value)
 {
 	struct xpc_lite_object *xo;
@@ -299,7 +299,8 @@ xpc_lite_dictionary_set_bool(xpc_lite_object_t xdict, const char *key, bool valu
 
 	xo = xdict;
 	xotmp = xpc_lite_bool_create(value);
-	xpc_lite_dictionary_set_value(xdict, key, xotmp);
+    // 为了统一释放key，这里使用strdup(key)创建一个新的key
+	xpc_lite_dictionary_set_value(xdict, strdup(key), xotmp);
 }
 
 void
@@ -309,7 +310,7 @@ xpc_lite_dictionary_set_int64(xpc_lite_object_t xdict, const char *key, int64_t 
 
 	xo = xdict;
 	xotmp = xpc_lite_int64_create(value);
-	xpc_lite_dictionary_set_value(xdict, key, xotmp);
+    xpc_lite_dictionary_set_value(xdict, strdup(key), xotmp);
 }
 
 void
@@ -319,7 +320,7 @@ xpc_lite_dictionary_set_uint64(xpc_lite_object_t xdict, const char *key, uint64_
 
 	xo = xdict;
 	xotmp = xpc_lite_uint64_create(value);
-	xpc_lite_dictionary_set_value(xdict, key, xotmp);
+    xpc_lite_dictionary_set_value(xdict, strdup(key), xotmp);
 }
 
 void
@@ -329,7 +330,7 @@ xpc_lite_dictionary_set_double(xpc_lite_object_t xdict, const char *key, double 
 
     xo = xdict;
     xotmp = xpc_lite_double_create(value);
-    xpc_lite_dictionary_set_value(xdict, key, xotmp);
+    xpc_lite_dictionary_set_value(xdict, strdup(key), xotmp);
 }
 
 void
@@ -340,7 +341,7 @@ xpc_lite_dictionary_set_string(xpc_lite_object_t xdict, const char *key,
 
 	xo = xdict;
 	xotmp = xpc_lite_string_create(value);
-	xpc_lite_dictionary_set_value(xdict, key, xotmp);
+	xpc_lite_dictionary_set_value(xdict, strdup(key), xotmp);
 }
 
 bool

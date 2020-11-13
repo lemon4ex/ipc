@@ -462,7 +462,7 @@ xpc_lite_copy(xpc_lite_object_t obj)
 		case _XPC_TYPE_DICTIONARY:
 			xotmp = xpc_lite_dictionary_create(NULL, NULL, 0);
 			xpc_lite_dictionary_apply(obj, ^(const char *k, xpc_lite_object_t v) {
-			    xpc_lite_dictionary_set_value(xotmp, k, xpc_lite_copy(v));
+			    xpc_lite_dictionary_set_value(xotmp, strdup(k), xpc_lite_copy(v));
 			    return (bool)true;
 			});
 			return (xotmp);

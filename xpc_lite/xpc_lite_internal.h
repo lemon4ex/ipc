@@ -125,7 +125,7 @@ struct xpc_lite_object {
 };
 
 struct xpc_lite_dict_pair {
-	const char *		key;
+	char *		key;
 	struct xpc_lite_object *	value;
 	TAILQ_ENTRY(xpc_lite_dict_pair) xo_link;
 };

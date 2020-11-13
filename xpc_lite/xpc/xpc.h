@@ -1866,7 +1866,7 @@ xpc_lite_dictionary_create_reply(xpc_lite_object_t original);
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_NONNULL1 XPC_NONNULL2
 void
-xpc_lite_dictionary_set_value(xpc_lite_object_t xdict, const char *key,
+xpc_lite_dictionary_set_value(xpc_lite_object_t xdict, char *key,
 	xpc_lite_object_t value);
 
 /*!
