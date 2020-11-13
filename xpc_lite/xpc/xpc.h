@@ -355,11 +355,11 @@ __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_NONNULL1
 xpc_lite_object_t
 xpc_lite_retain(xpc_lite_object_t object);
-#if OS_OBJECT_USE_OBJC_RETAIN_RELEASE
-#undef xpc_lite_retain
-#define xpc_lite_retain(object) ({ xpc_lite_object_t _o = (object); \
+//#if OS_OBJECT_USE_OBJC_RETAIN_RELEASE
+//#undef xpc_lite_retain
+//#define xpc_lite_retain(object) ({ xpc_lite_object_t _o = (object); \
 		_xpc_lite_object_validate(_o); [_o retain]; })
-#endif // OS_OBJECT_USE_OBJC_RETAIN_RELEASE
+//#endif // OS_OBJECT_USE_OBJC_RETAIN_RELEASE
 
 /*!
  * @function xpc_lite_release
@@ -380,11 +380,11 @@ __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT XPC_NONNULL1
 void
 xpc_lite_release(xpc_lite_object_t object);
-#if OS_OBJECT_USE_OBJC_RETAIN_RELEASE
-#undef xpc_lite_release
-#define xpc_lite_release(object) ({ xpc_lite_object_t _o = (object); \
-		_xpc_lite_object_validate(_o); [_o release]; })
-#endif // OS_OBJECT_USE_OBJC_RETAIN_RELEASE
+//#if OS_OBJECT_USE_OBJC_RETAIN_RELEASE
+//#undef xpc_lite_release
+//#define xpc_lite_release(object) ({ xpc_lite_object_t _o = (object); \
+//		_xpc_lite_object_validate(_o); [_o release]; })
+//#endif // OS_OBJECT_USE_OBJC_RETAIN_RELEASE
 
 /*!
  * @function xpc_lite_get_type

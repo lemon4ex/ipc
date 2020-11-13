@@ -29,7 +29,7 @@
 #include "xpc.h"
 #ifdef __APPLE__
 #include <libkern/OSAtomic.h>
-#define XPC_CONNECTION_NEXT_ID(conn) (OSAtomicAdd32(1,&conn->xc_last_id))
+#define XPC_CONNECTION_NEXT_ID(conn) (OSAtomicAdd64(1,&conn->xc_last_id))
 #else
 #include <machine/atomic.h>
 #define XPC_CONNECTION_NEXT_ID(conn) (atomic_fetchadd_int(&conn->xc_last_id,1))
@@ -183,12 +183,16 @@ xpc_lite_connection_send_message(xpc_lite_connection_t xconn,
 	conn = (struct xpc_lite_connection *)xconn;
 	id = xpc_lite_dictionary_get_uint64(message, XPC_SEQID);
 
-	if (id == 0)
-		id = XPC_CONNECTION_NEXT_ID(conn);
+    if (id == 0){
+        id = XPC_CONNECTION_NEXT_ID(conn);
+    }
 
+    xpc_lite_retain(message);
 	dispatch_async(conn->xc_send_queue, ^{
 		xpc_lite_send(xconn, message, id);
+        xpc_lite_release(message);
 	});
+    
 }
 
 void
@@ -205,8 +209,10 @@ xpc_lite_connection_send_message_with_reply(xpc_lite_connection_t xconn,
 	call->xp_queue = targetq;
 	TAILQ_INSERT_TAIL(&conn->xc_pending, call, xp_link);
 
+    xpc_lite_retain(message);
 	dispatch_async(conn->xc_send_queue, ^{
 		xpc_lite_send(xconn, message, call->xp_id);
+        xpc_lite_release(message);
 	});
 
 }
@@ -342,8 +348,6 @@ static void
 xpc_lite_send(xpc_lite_connection_t xconn, xpc_lite_object_t message, uint64_t id)
 {
 	struct xpc_lite_connection *conn;
-	int err;
-
 	debugf("connection=%p, message=%p, id=%lu", xconn, message, id);
 
 	conn = (struct xpc_lite_connection *)xconn;
@@ -441,11 +445,12 @@ xpc_lite_connection_dispatch_callback(struct xpc_lite_connection *conn,
     xpc_lite_object_t result, uint64_t id)
 {
 	struct xpc_lite_pending_call *call;
-
 	TAILQ_FOREACH(call, &conn->xc_pending, xp_link) {
 		if (call->xp_id == id) {
+            xpc_lite_retain(result);
 			dispatch_async(conn->xc_target_queue, ^{
 			    call->xp_handler(result);
+                xpc_lite_release(result);
 			    TAILQ_REMOVE(&conn->xc_pending, call,
 				xp_link);
 			    free(call);
@@ -456,9 +461,11 @@ xpc_lite_connection_dispatch_callback(struct xpc_lite_connection *conn,
 
 	if (conn->xc_handler) {
 		debugf("yes");
+        xpc_lite_retain(result);
 		dispatch_async(conn->xc_target_queue, ^{
 		    debugf("calling handler=%p", conn->xc_handler);
 		    conn->xc_handler(result);
+            xpc_lite_release(result);
 		});
 	}
 }
@@ -466,7 +473,7 @@ xpc_lite_connection_dispatch_callback(struct xpc_lite_connection *conn,
 void
 xpc_lite_connection_recv_message(void *context)
 {
-	struct xpc_lite_pending_call *call;
+//	struct xpc_lite_pending_call *call;
 	struct xpc_lite_connection *conn;
 	struct xpc_lite_credentials creds;
 	xpc_lite_object_t result;
@@ -480,19 +487,21 @@ xpc_lite_connection_recv_message(void *context)
 	err = xpc_lite_pipe_receive(conn->xc_local_port, &remote, &result, &id,
 	    &creds);
 
-	if (err < 0)
-		return;
-
+    if (err < 0){
+        return;
+    }
+    
 	if (err == 0) {
 		dispatch_source_cancel(conn->xc_recv_source);
 		return;
 	}
 
-	debugf("msg=%p, id=%lu", result, id);
+	debugf("msg=%p, id=%llu", result, id);
 
 	conn->xc_creds = creds;
 
 	xpc_lite_connection_dispatch_callback(conn, result, id);
+    xpc_lite_release(result);
 }
 
 void

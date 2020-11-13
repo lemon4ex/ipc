@@ -119,7 +119,7 @@ xpc2mpack(mpack_writer_t *writer, xpc_lite_object_t obj)
 
 	switch (xotmp->xo_xpc_lite_type) {
 	case _XPC_TYPE_DICTIONARY:
-		mpack_start_map(writer, xpc_lite_dictionary_get_count(obj));
+		mpack_start_map(writer, (uint32_t)xpc_lite_dictionary_get_count(obj));
 		xpc_lite_dictionary_apply(obj, ^(const char *k, xpc_lite_object_t v) {
 		    mpack_write_cstr(writer, k);
 		    xpc2mpack(writer, v);
@@ -129,7 +129,7 @@ xpc2mpack(mpack_writer_t *writer, xpc_lite_object_t obj)
 		break;
 
 	case _XPC_TYPE_ARRAY:
-		mpack_start_array(writer, xpc_lite_array_get_count(obj));
+		mpack_start_array(writer, (uint32_t)xpc_lite_array_get_count(obj));
 		xpc_lite_array_apply(obj, ^(size_t index __unused, xpc_lite_object_t v) {
 		    xpc2mpack(writer, v);
 		    return ((bool)true);

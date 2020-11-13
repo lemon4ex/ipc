@@ -181,11 +181,11 @@ xpc_lite_release(xpc_lite_object_t obj)
 
 	xo = obj;
 #ifdef __APPLE__
-    if (OSAtomicAdd32(-1,&xo->xo_refcnt) > 1) {
+    if (OSAtomicAdd32(-1,&xo->xo_refcnt) > 0) {
         return;
     }
 #else
-    if (atomic_fetchadd_int(&xo->xo_refcnt, -1) > 1)
+    if (atomic_fetchadd_int(&xo->xo_refcnt, -1) > 0)
         return;
 #endif
 	xpc_lite_object_destroy(xo);
@@ -421,34 +421,40 @@ xpc_lite_pipe_receive(xpc_lite_port_t local, xpc_lite_port_t *remote, xpc_lite_o
 	    &resources, &nresources, creds);
 	if (ret < 0) {
 		debugf("transport receive function failed: %s", strerror(errno));
+        free(buffer);
 		return (-1);
 	}
 
 	if (ret == 0) {
 		debugf("remote side closed connection, port=%s", transport->xt_port_to_string(local));
+        free(buffer);
 		return (ret);
 	}
 
 	header = (struct xpc_lite_frame_header *)buffer;
 	if (header->length > (ret - sizeof(*header))) {
 		debugf("invalid message length");
+        free(buffer);
 		return (-1);
 	}
 
 	if (header->version != XPC_PROTOCOL_VERSION) {
 		debugf("invalid protocol version")
+        free(buffer);
 		return (-1);
 	}
 
 	*id = header->id;
 
-	debugf("length=%ld", header->length);
+	debugf("length=%lld", header->length);
 
-	*result = xpc_lite_unpack(buffer + sizeof(*header), header->length);
+	*result = xpc_lite_unpack(buffer + sizeof(*header), (size_t)header->length);
 
-	if (*result == NULL)
-		return (-1);
-
+    if (*result == NULL){
+        free(buffer);
+        return (-1);
+    }
+    
 	free(buffer);
 	return (ret);
 }
