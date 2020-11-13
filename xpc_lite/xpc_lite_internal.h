@@ -221,7 +221,7 @@ __private_extern__ struct xpc_lite_object *mpack2xpc(mpack_node_t node);
 __private_extern__ void xpc2mpack(mpack_writer_t *writer, xpc_lite_object_t xo);
 __private_extern__ void xpc_lite_object_destroy(struct xpc_lite_object *xo);
 __private_extern__ void xpc_lite_connection_recv_message(void *);
-__private_extern__ void xpc_lite_connection_recv_mach_message(void *);
+//__private_extern__ void xpc_lite_connection_recv_mach_message(void *);
 __private_extern__ void *xpc_lite_connection_new_peer(void *context,
     xpc_lite_port_t local, xpc_lite_port_t remote, dispatch_source_t src);
 __private_extern__ void xpc_lite_connection_destroy_peer(void *context);

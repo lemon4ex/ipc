@@ -505,35 +505,35 @@ xpc_lite_connection_recv_message(void *context)
     xpc_lite_release(result);
 }
 
-void
-xpc_lite_connection_recv_mach_message(void *context)
-{
-	struct xpc_lite_transport *transport = xpc_lite_get_transport();
-
-	struct xpc_lite_connection *conn, *peer;
-	struct xpc_lite_credentials creds;
-	xpc_lite_object_t result;
-	xpc_lite_port_t remote;
-	uint64_t id;
-
-	debugf("connection=%p", context);
-
-	conn = context;
-	if (xpc_lite_pipe_receive(conn->xc_local_port, &remote, &result, &id,
-	    &creds) < 0)
-		return;
-
-	debugf("message=%p, id=%llu, remote=%d", result, id, remote);
-
-	peer = xpc_lite_connection_get_peer(context, remote);
-	if (!peer) {
-		debugf("new peer on port %d",remote);
-		peer = xpc_lite_connection_new_peer(context, conn->xc_local_port, remote, NULL);
-
-		dispatch_async(conn->xc_target_queue, ^{
-		    conn->xc_handler(peer);
-		    xpc_lite_connection_dispatch_callback(peer, result, id);
-		});
-	} else
-		xpc_lite_connection_dispatch_callback(peer, result, id);
-}
+//void
+//xpc_lite_connection_recv_mach_message(void *context)
+//{
+//	struct xpc_lite_transport *transport = xpc_lite_get_transport();
+//
+//	struct xpc_lite_connection *conn, *peer;
+//	struct xpc_lite_credentials creds;
+//	xpc_lite_object_t result;
+//	xpc_lite_port_t remote;
+//	uint64_t id;
+//
+//	debugf("connection=%p", context);
+//
+//	conn = context;
+//	if (xpc_lite_pipe_receive(conn->xc_local_port, &remote, &result, &id,
+//	    &creds) < 0)
+//		return;
+//
+//	debugf("message=%p, id=%llu, remote=%d", result, id, remote);
+//
+//	peer = xpc_lite_connection_get_peer(context, remote);
+//	if (!peer) {
+//		debugf("new peer on port %d",remote);
+//		peer = xpc_lite_connection_new_peer(context, conn->xc_local_port, remote, NULL);
+//
+//		dispatch_async(conn->xc_target_queue, ^{
+//		    conn->xc_handler(peer);
+//		    xpc_lite_connection_dispatch_callback(peer, result, id);
+//		});
+//	} else
+//		xpc_lite_connection_dispatch_callback(peer, result, id);
+//}

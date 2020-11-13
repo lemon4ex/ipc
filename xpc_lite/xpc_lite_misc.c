@@ -145,6 +145,7 @@ xpc_lite_unpack(void *buf, size_t size)
 	}
     mpack_tree_parse(&tree);
 	xo = mpack2xpc(mpack_tree_root(&tree));
+    mpack_tree_destroy(&tree);
 	return (xo);
 }
 
