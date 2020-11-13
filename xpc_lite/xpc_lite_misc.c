@@ -426,7 +426,7 @@ xpc_lite_pipe_receive(xpc_lite_port_t local, xpc_lite_port_t *remote, xpc_lite_o
 	}
 
 	if (ret == 0) {
-		debugf("remote side closed connection, port=%s", transport->xt_port_to_string(local));
+		debugf("remote side closed connection, port=%d", (uint32_t)local);
         free(buffer);
 		return (ret);
 	}

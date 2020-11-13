@@ -64,6 +64,8 @@ xpc_lite_connection_create(const char *name, dispatch_queue_t targetq)
 	asprintf(&qname, "com.ixsystems.xpc.connection.recvq.%p", conn);
 	conn->xc_recv_queue = dispatch_queue_create(qname, NULL);
 
+    free(qname);
+    
 	/* Create target queue */
 	conn->xc_target_queue = targetq ? targetq : dispatch_get_main_queue();
 
@@ -514,7 +516,6 @@ xpc_lite_connection_recv_mach_message(void *context)
 	xpc_lite_object_t result;
 	xpc_lite_port_t remote;
 	uint64_t id;
-	int err;
 
 	debugf("connection=%p", context);
 
@@ -523,13 +524,11 @@ xpc_lite_connection_recv_mach_message(void *context)
 	    &creds) < 0)
 		return;
 
-	debugf("message=%p, id=%lu, remote=%s", result, id,
-	    transport->xt_port_to_string(remote));
+	debugf("message=%p, id=%llu, remote=%d", result, id, remote);
 
 	peer = xpc_lite_connection_get_peer(context, remote);
 	if (!peer) {
-		debugf("new peer on port %s",
-		    transport->xt_port_to_string(remote));
+		debugf("new peer on port %d",remote);
 		peer = xpc_lite_connection_new_peer(context, conn->xc_local_port, remote, NULL);
 
 		dispatch_async(conn->xc_target_queue, ^{

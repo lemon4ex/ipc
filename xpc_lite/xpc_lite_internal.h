@@ -184,7 +184,7 @@ struct xpc_lite_transport {
     	xpc_lite_transport_init_t 	xt_init;
     	xpc_lite_transport_listen_t 	xt_listen;
     	xpc_lite_transport_lookup 	xt_lookup;
-    	xpc_lite_transport_port_to_string xt_port_to_string;
+//    	xpc_lite_transport_port_to_string xt_port_to_string;
     	xpc_lite_transport_port_compare xt_port_compare;
     	xpc_lite_transport_release 	xt_release;
     	xpc_lite_transport_send 	xt_send;

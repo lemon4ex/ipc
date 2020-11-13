@@ -46,7 +46,7 @@
 static int unix_lookup(const char *name, xpc_lite_port_t *local, xpc_lite_port_t *remote);
 static int unix_listen(const char *name, xpc_lite_port_t *port);
 static int unix_release(xpc_lite_port_t port);
-static char *unix_port_to_string(xpc_lite_port_t port);
+//static char *unix_port_to_string(xpc_lite_port_t port);
 static int unix_port_compare(xpc_lite_port_t p1, xpc_lite_port_t p2);
 static dispatch_source_t unix_create_client_source(xpc_lite_port_t port, void *,
     dispatch_queue_t tq);
@@ -138,21 +138,21 @@ unix_release(xpc_lite_port_t port)
 	return (0);
 }
 
-static char *
-unix_port_to_string(xpc_lite_port_t port)
-{
-	int fd = (int)port;
-	char *ret;
-
-	if (fd == -1) {
-		asprintf(&ret, "<invalid>");
-		return (ret);
-	}
-
-
-	asprintf(&ret, "<%d>", fd);
-	return (ret);
-}
+//static char *
+//unix_port_to_string(xpc_lite_port_t port)
+//{
+//	int fd = (int)port;
+//	char *ret;
+//
+//	if (fd == -1) {
+//		asprintf(&ret, "<invalid>");
+//		return (ret);
+//	}
+//
+//
+//	asprintf(&ret, "<%d>", fd);
+//	return (ret);
+//}
 
 static int
 unix_port_compare(xpc_lite_port_t p1, xpc_lite_port_t p2)
@@ -213,8 +213,8 @@ unix_send(xpc_lite_port_t local, xpc_lite_port_t remote __unused, void *buf, siz
     struct iovec iov = { .iov_base = buf, .iov_len = len };
     int i, nfds = 0;
 
-    debugf("local=%s, remote=%s, msg=%p, size=%ld",
-        unix_port_to_string(local), unix_port_to_string(remote),
+    debugf("local=%d, remote=%d, msg=%p, size=%ld",
+        local, remote,
         buf, len);
 
     memset(&msg, 0, sizeof(struct msghdr));
@@ -355,8 +355,8 @@ unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf, size_t len,
     }
 
     *remote = NULL;
-    debugf("local=%s, remote=%s, msg=%p, len=%ld",
-        unix_port_to_string(local), unix_port_to_string(*remote),
+    debugf("local=%d, remote=%d, msg=%p, len=%ld",
+        local, *remote,
         buf, recvd);
 
 	return (recvd);
@@ -367,7 +367,7 @@ struct xpc_lite_transport unix_transport = {
 	.xt_listen = unix_listen,
 	.xt_lookup = unix_lookup,
 	.xt_release = unix_release,
-    	.xt_port_to_string = unix_port_to_string,
+//    	.xt_port_to_string = unix_port_to_string,
     	.xt_port_compare = unix_port_compare,
     	.xt_create_server_source = unix_create_server_source,
     	.xt_create_client_source = unix_create_client_source,
