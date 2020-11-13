@@ -209,9 +209,9 @@ unix_send(xpc_lite_port_t local, xpc_lite_port_t remote __unused, void *buf, siz
 {
 	int fd = (int)local;
 	struct msghdr msg;
-    struct cmsghdr *cmsg;
+//    struct cmsghdr *cmsg;
     struct iovec iov = { .iov_base = buf, .iov_len = len };
-    int i, nfds = 0;
+//    int i, nfds = 0;
 
     debugf("local=%d, remote=%d, msg=%p, size=%ld",
         local, remote,
@@ -220,60 +220,60 @@ unix_send(xpc_lite_port_t local, xpc_lite_port_t remote __unused, void *buf, siz
     memset(&msg, 0, sizeof(struct msghdr));
     msg.msg_iov = &iov;
     msg.msg_iovlen = 1;
-    
-#ifdef __APPLE__
-    for (i = 0; i < nres; i++) {
-        if (res[i].xr_type == XPC_RESOURCE_FD)
-            nfds++;
-    }
-
-    if (nres > 0) {
-        int *fds;
-
-        msg.msg_controllen = CMSG_SPACE(nfds * sizeof(int));
-        msg.msg_control = malloc(msg.msg_controllen);
-        cmsg = CMSG_FIRSTHDR(&msg);
-        cmsg->cmsg_type = SCM_RIGHTS;
-        cmsg->cmsg_level = SOL_SOCKET;
-        cmsg->cmsg_len = CMSG_LEN(nres * sizeof(int));
-        fds = (int *)CMSG_DATA(cmsg);
-        for (i = 0; i < nres; i++) {
-            if (res[i].xr_type == XPC_RESOURCE_FD)
-                *fds++ = res[i].xr_fd;
-        }
-    }
-#else
-    msg.msg_controllen = CMSG_SPACE(sizeof(struct cmsgcred));
-    msg.msg_control = malloc(msg.msg_controllen);
-
-    cmsg = CMSG_FIRSTHDR(&msg);
-    cmsg->cmsg_type = SCM_CREDS;
-    cmsg->cmsg_level = SOL_SOCKET;
-    cmsg->cmsg_len = CMSG_LEN(sizeof(struct cmsgcred));
-
-    for (i = 0; i < nres; i++) {
-        if (res[i].xr_type == XPC_RESOURCE_FD)
-            nfds++;
-    }
-
-    if (nres > 0) {
-        int *fds;
-
-        msg.msg_controllen = CMSG_SPACE(sizeof(struct cmsgcred)) +
-            CMSG_SPACE(nfds * sizeof(int));
-        msg.msg_control = realloc(msg.msg_control, msg.msg_controllen);
-        cmsg = CMSG_NXTHDR(&msg, cmsg);
-        cmsg->cmsg_type = SCM_RIGHTS;
-        cmsg->cmsg_level = SOL_SOCKET;
-        cmsg->cmsg_len = CMSG_LEN(nres * sizeof(int));
-        fds = (int *)CMSG_DATA(cmsg);
-
-        for (i = 0; i < nres; i++) {
-            if (res[i].xr_type == XPC_RESOURCE_FD)
-                *fds++ = res[i].xr_fd;
-        }
-    }
-#endif
+//
+//#ifdef __APPLE__
+//    for (i = 0; i < nres; i++) {
+//        if (res[i].xr_type == XPC_RESOURCE_FD)
+//            nfds++;
+//    }
+//
+//    if (nres > 0) {
+//        int *fds;
+//
+//        msg.msg_controllen = CMSG_SPACE(nfds * sizeof(int));
+//        msg.msg_control = malloc(msg.msg_controllen);
+//        cmsg = CMSG_FIRSTHDR(&msg);
+//        cmsg->cmsg_type = SCM_RIGHTS;
+//        cmsg->cmsg_level = SOL_SOCKET;
+//        cmsg->cmsg_len = CMSG_LEN(nres * sizeof(int));
+//        fds = (int *)CMSG_DATA(cmsg);
+//        for (i = 0; i < nres; i++) {
+//            if (res[i].xr_type == XPC_RESOURCE_FD)
+//                *fds++ = res[i].xr_fd;
+//        }
+//    }
+//#else
+//    msg.msg_controllen = CMSG_SPACE(sizeof(struct cmsgcred));
+//    msg.msg_control = malloc(msg.msg_controllen);
+//
+//    cmsg = CMSG_FIRSTHDR(&msg);
+//    cmsg->cmsg_type = SCM_CREDS;
+//    cmsg->cmsg_level = SOL_SOCKET;
+//    cmsg->cmsg_len = CMSG_LEN(sizeof(struct cmsgcred));
+//
+//    for (i = 0; i < nres; i++) {
+//        if (res[i].xr_type == XPC_RESOURCE_FD)
+//            nfds++;
+//    }
+//
+//    if (nres > 0) {
+//        int *fds;
+//
+//        msg.msg_controllen = CMSG_SPACE(sizeof(struct cmsgcred)) +
+//            CMSG_SPACE(nfds * sizeof(int));
+//        msg.msg_control = realloc(msg.msg_control, msg.msg_controllen);
+//        cmsg = CMSG_NXTHDR(&msg, cmsg);
+//        cmsg->cmsg_type = SCM_RIGHTS;
+//        cmsg->cmsg_level = SOL_SOCKET;
+//        cmsg->cmsg_len = CMSG_LEN(nres * sizeof(int));
+//        fds = (int *)CMSG_DATA(cmsg);
+//
+//        for (i = 0; i < nres; i++) {
+//            if (res[i].xr_type == XPC_RESOURCE_FD)
+//                *fds++ = res[i].xr_fd;
+//        }
+//    }
+//#endif
     
     if (sendmsg(fd, &msg, 0) < 0)
         return (-1);
@@ -289,10 +289,11 @@ unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf, size_t len,
 	struct msghdr msg;
     struct cmsghdr *cmsg;
     
-#ifndef __APPLE__
-    struct cmsgcred *recv_creds = NULL;
-#endif
+//#ifndef __APPLE__
+//    struct cmsgcred *recv_creds = NULL;
+//#endif
     
+    memset(&msg, 0, sizeof(struct msghdr));
     struct iovec iov = { .iov_base = buf, .iov_len = len };
     int *recv_fds = NULL;
     size_t recv_fds_count = 0;
@@ -302,8 +303,6 @@ unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf, size_t len,
     msg.msg_namelen = 0;
     msg.msg_iov = &iov;
     msg.msg_iovlen = 1;
-    msg.msg_control = malloc(4096);
-    msg.msg_controllen = 4096;
 
     recvd = recvmsg(fd, &msg, 0);
     if (recvd < 0)
@@ -311,48 +310,48 @@ unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf, size_t len,
 
     if (recvd == 0)
         return (0);
-
-#ifdef __APPLE__
-    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
-         cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-        if (cmsg->cmsg_type == SCM_RIGHTS) {
-            recv_fds = (int *)CMSG_DATA(cmsg);
-            recv_fds_count = CMSG_SPACE(cmsg);
-        }
-    }
-#else
-    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
-         cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-        if (cmsg->cmsg_type == SCM_CREDS) {
-            recv_creds = (struct cmsgcred *)CMSG_DATA(cmsg);
-            continue;
-        }
-
-        if (cmsg->cmsg_type == SCM_RIGHTS) {
-            recv_fds = (int *)CMSG_DATA(cmsg);
-            recv_fds_count = CMSG_SPACE(cmsg);
-        }
-    }
-
-    if (recv_creds != NULL) {
-        creds->xc_remote_pid = recv_creds->cmcred_pid;
-        creds->xc_remote_euid = recv_creds->cmcred_euid;
-        creds->xc_remote_guid = recv_creds->cmcred_gid;
-        debugf("remote pid=%d, uid=%d, gid=%d", recv_creds->cmcred_pid,
-            recv_creds->cmcred_uid, recv_creds->cmcred_gid);
-
-    }
-#endif
-
-    if (recv_fds != NULL) {
-        int i;
-        *res = malloc(sizeof(struct xpc_lite_resource) * recv_fds_count);
-
-        for (i = 0; i < recv_fds_count; i++) {
-            (*res)[i].xr_type = XPC_RESOURCE_FD;
-            (*res)[i].xr_fd = recv_fds[i];
-        }
-    }
+//
+//#ifdef __APPLE__
+//    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
+//         cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+//        if (cmsg->cmsg_type == SCM_RIGHTS) {
+//            recv_fds = (int *)CMSG_DATA(cmsg);
+//            recv_fds_count = CMSG_SPACE(cmsg);
+//        }
+//    }
+//#else
+//    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
+//         cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+//        if (cmsg->cmsg_type == SCM_CREDS) {
+//            recv_creds = (struct cmsgcred *)CMSG_DATA(cmsg);
+//            continue;
+//        }
+//
+//        if (cmsg->cmsg_type == SCM_RIGHTS) {
+//            recv_fds = (int *)CMSG_DATA(cmsg);
+//            recv_fds_count = CMSG_SPACE(cmsg);
+//        }
+//    }
+//
+//    if (recv_creds != NULL) {
+//        creds->xc_remote_pid = recv_creds->cmcred_pid;
+//        creds->xc_remote_euid = recv_creds->cmcred_euid;
+//        creds->xc_remote_guid = recv_creds->cmcred_gid;
+//        debugf("remote pid=%d, uid=%d, gid=%d", recv_creds->cmcred_pid,
+//            recv_creds->cmcred_uid, recv_creds->cmcred_gid);
+//
+//    }
+//#endif
+//
+//    if (recv_fds != NULL) {
+//        int i;
+//        *res = malloc(sizeof(struct xpc_lite_resource) * recv_fds_count);
+//
+//        for (i = 0; i < recv_fds_count; i++) {
+//            (*res)[i].xr_type = XPC_RESOURCE_FD;
+//            (*res)[i].xr_fd = recv_fds[i];
+//        }
+//    }
 
     *remote = NULL;
     debugf("local=%d, remote=%d, msg=%p, len=%ld",
