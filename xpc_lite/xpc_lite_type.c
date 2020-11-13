@@ -148,14 +148,14 @@ _xpc_lite_prim_create_flags(int type, xpc_lite_u value, size_t size, uint16_t fl
 xpc_lite_object_t
 xpc_lite_null_create(void)
 {
-	xpc_lite_u val;
+    xpc_lite_u val = {0};
 	return _xpc_lite_prim_create(_XPC_TYPE_NULL, val, 0);
 }
 
 xpc_lite_object_t
 xpc_lite_bool_create(bool value)
 {
-	xpc_lite_u val;
+	xpc_lite_u val = {0};
 
 	val.b = value;
 	return _xpc_lite_prim_create(_XPC_TYPE_BOOL, val, 1);
@@ -179,7 +179,7 @@ xpc_lite_bool_get_value(xpc_lite_object_t xbool)
 xpc_lite_object_t
 xpc_lite_int64_create(int64_t value)
 {
-	xpc_lite_u val;
+	xpc_lite_u val = {0};
 
 	val.i = value;
 	return _xpc_lite_prim_create(_XPC_TYPE_INT64, val, 1);
@@ -203,7 +203,7 @@ xpc_lite_int64_get_value(xpc_lite_object_t xint)
 xpc_lite_object_t
 xpc_lite_uint64_create(uint64_t value)
 {
-	xpc_lite_u val;
+	xpc_lite_u val = {0};
 
 	val.ui = value;
 	return _xpc_lite_prim_create(_XPC_TYPE_UINT64, val, 1);
@@ -227,7 +227,7 @@ xpc_lite_uint64_get_value(xpc_lite_object_t xuint)
 xpc_lite_object_t
 xpc_lite_double_create(double value)
 {
-	xpc_lite_u val;
+	xpc_lite_u val = {0};
 
 	val.d = value;
 	return _xpc_lite_prim_create(_XPC_TYPE_DOUBLE, val, 1);
@@ -247,7 +247,7 @@ xpc_lite_double_get_value(xpc_lite_object_t xdouble)
 xpc_lite_object_t
 xpc_lite_date_create(int64_t interval)
 {
-	xpc_lite_u val;
+	xpc_lite_u val = {0};
 
 	val.i = interval;
 	return _xpc_lite_prim_create(_XPC_TYPE_DATE, val, 1);
@@ -256,7 +256,7 @@ xpc_lite_date_create(int64_t interval)
 xpc_lite_object_t
 xpc_lite_date_create_from_current(void)
 {
-	xpc_lite_u val;
+	xpc_lite_u val = {0};
 	struct timespec tp;
 
 	clock_gettime(CLOCK_REALTIME, &tp);
@@ -282,7 +282,7 @@ xpc_lite_date_get_value(xpc_lite_object_t xdate)
 xpc_lite_object_t
 xpc_lite_data_create(const void *bytes, size_t length)
 {
-	xpc_lite_u val;
+	xpc_lite_u val = {0};
 
 	val.ptr = (uintptr_t)bytes;
 	return _xpc_lite_prim_create(_XPC_TYPE_DATA, val, length);
@@ -335,7 +335,7 @@ xpc_lite_data_get_bytes(xpc_lite_object_t xdata, void *buffer, size_t off, size_
 xpc_lite_object_t
 xpc_lite_string_create(const char *string)
 {
-	xpc_lite_u val;
+	xpc_lite_u val = {0};
 
 	val.str = __DECONST(char *, string);
 	return _xpc_lite_prim_create(_XPC_TYPE_STRING, val, strlen(string));
@@ -345,7 +345,7 @@ xpc_lite_object_t
 xpc_lite_string_create_with_format(const char *fmt, ...)
 {
 	va_list ap;
-	xpc_lite_u val;
+	xpc_lite_u val = {0};
 
 	va_start(ap, fmt);
 	vasprintf(&val.str, fmt, ap);
@@ -356,7 +356,7 @@ xpc_lite_string_create_with_format(const char *fmt, ...)
 xpc_lite_object_t
 xpc_lite_string_create_with_format_and_arguments(const char *fmt, va_list ap)
 {
-	xpc_lite_u val;
+	xpc_lite_u val = {0};
 
 	vasprintf(&val.str, fmt, ap);
 	return _xpc_lite_prim_create(_XPC_TYPE_STRING, val, strlen(val.str));
@@ -393,7 +393,7 @@ xpc_lite_string_get_string_ptr(xpc_lite_object_t xstring)
 xpc_lite_object_t
 xpc_lite_uuid_create(const uuid_t uuid)
 {
-	xpc_lite_u val;
+	xpc_lite_u val = {0};
 
 	memcpy(val.uuid, uuid, sizeof(uuid_t));
 	return _xpc_lite_prim_create(_XPC_TYPE_UUID, val, 1);
