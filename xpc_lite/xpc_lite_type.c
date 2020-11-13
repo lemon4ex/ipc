@@ -116,7 +116,6 @@ static const char *xpc_lite_typestr[] = {
 __private_extern__ struct xpc_lite_object *
 _xpc_lite_prim_create(int type, xpc_lite_u value, size_t size)
 {
-
 	return (_xpc_lite_prim_create_flags(type, value, size, 0));
 }
 

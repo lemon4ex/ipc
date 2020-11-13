@@ -350,8 +350,7 @@ static void
 xpc_lite_send(xpc_lite_connection_t xconn, xpc_lite_object_t message, uint64_t id)
 {
 	struct xpc_lite_connection *conn;
-	debugf("connection=%p, message=%p, id=%lu", xconn, message, id);
-
+    debugf("connection=%p, message=%p, id=%llu", xconn, message, id);
 	conn = (struct xpc_lite_connection *)xconn;
 	if (xpc_lite_pipe_send(message, id, conn->xc_local_port,
 	    conn->xc_remote_port) != 0)

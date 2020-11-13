@@ -263,7 +263,6 @@ xpc_lite_dictionary_set_value(xpc_lite_object_t xdict, const char *key,
 	pair->key = key;
 	pair->value = value;
 	TAILQ_INSERT_TAIL(&xo->xo_dict, pair, xo_link);
-	xpc_lite_retain(value);
 }
 
 xpc_lite_object_t
@@ -390,7 +389,7 @@ double xpc_lite_dictionary_get_double(xpc_lite_object_t xdict, const char *key){
 bool
 xpc_lite_dictionary_apply(xpc_lite_object_t xdict, xpc_lite_dictionary_applier_t applier)
 {
-	struct xpc_lite_object *xo, *xotmp;
+	struct xpc_lite_object *xo;
 	struct xpc_lite_dict_head *head;
 	struct xpc_lite_dict_pair *pair;
 

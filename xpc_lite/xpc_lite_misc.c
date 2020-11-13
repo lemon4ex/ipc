@@ -41,8 +41,8 @@
 
 #define RECV_BUFFER_SIZE	65536
 
-static void xpc_lite_copy_description_level(xpc_lite_object_t obj, struct sbuf *sbuf,
-    int level);
+//static void xpc_lite_copy_description_level(xpc_lite_object_t obj, struct sbuf *sbuf,
+//    int level);
 
 extern struct xpc_lite_transport unix_transport __attribute__((weak));
 extern struct xpc_lite_transport mach_transport __attribute__((weak));
