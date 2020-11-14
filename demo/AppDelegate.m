@@ -60,7 +60,7 @@ static void daemon_event_handler(ipc_connection_t peer)
     // net.ymlab.dev.daemon
     static ipc_connection_t service = NULL;
 //    NSString *name = [NSSearchPathForDirectoriesInDomains(9, 1, 1)[0] stringByAppendingPathComponent:@"daemon"];
-//    service = ipc_connection_create_mach_service(name.UTF8String, dispatch_get_main_queue(), XPC_CONNECTION_MACH_SERVICE_LISTENER);
+//    service = ipc_connection_create_uds_service(name.UTF8String, dispatch_get_main_queue(), XPC_CONNECTION_MACH_SERVICE_LISTENER);
     service = ipc_connection_create_tcp_service("127.0.0.1", 8998 , dispatch_get_main_queue(), XPC_CONNECTION_MACH_SERVICE_LISTENER);
 
     if (!service) {
@@ -75,7 +75,7 @@ static void daemon_event_handler(ipc_connection_t peer)
     ipc_connection_resume(service);
     
     static ipc_connection_t client = NULL;
-//    client = ipc_connection_create_mach_service(name.UTF8String, dispatch_get_main_queue(), 0);
+//    client = ipc_connection_create_uds_service(name.UTF8String, dispatch_get_main_queue(), 0);
     client = ipc_connection_create_tcp_service("127.0.0.1", 8998 , dispatch_get_main_queue(), 0);
     ipc_connection_set_event_handler(client, ^(ipc_object_t object){
         double result = ipc_dictionary_get_double(object, "result");

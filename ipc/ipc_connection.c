@@ -28,7 +28,7 @@
 #include <errno.h>
 #ifdef __APPLE__
 #include <libkern/OSAtomic.h>
-#define XPC_CONNECTION_NEXT_ID(conn) (OSAtomicAdd64(1,&conn->xc_last_id))
+#define XPC_CONNECTION_NEXT_ID(conn) (OSAtomicAdd64(1,(OSAtomic_int64_aligned64_t *)&conn->xc_last_id))
 #else
 #include <machine/atomic.h>
 #define XPC_CONNECTION_NEXT_ID(conn) (atomic_fetchadd_int(&conn->xc_last_id,1))
@@ -43,10 +43,9 @@
 static void ipc_send(ipc_connection_t xconn, ipc_object_t message, uint64_t id);
 
 ipc_connection_t
-ipc_connection_create(const char *name, dispatch_queue_t targetq)
+ipc_connection_create(dispatch_queue_t targetq)
 {
 	char *qname;
-//	struct ipc_transport *transport = ipc_get_transport();
 	struct ipc_connection *conn;
 
 	if ((conn = malloc(sizeof(struct ipc_connection))) == NULL) {
@@ -79,13 +78,12 @@ ipc_connection_create(const char *name, dispatch_queue_t targetq)
 }
 
 ipc_connection_t
-ipc_connection_create_mach_service(const char *name, dispatch_queue_t targetq,
-    uint64_t flags)
+ipc_connection_create_uds_service(const char *path, dispatch_queue_t targetq, uint64_t flags)
 {
 	struct ipc_transport *transport = ipc_get_transport();
 	struct ipc_connection *conn;
 
-	conn = (struct ipc_connection *)ipc_connection_create(name, targetq);
+	conn = (struct ipc_connection *)ipc_connection_create(targetq);
     if (conn == NULL){
         debugf("ipc_connection_create error");
         return (NULL);
@@ -94,7 +92,7 @@ ipc_connection_create_mach_service(const char *name, dispatch_queue_t targetq,
 	conn->xc_flags = flags;
 
 	if (flags & XPC_CONNECTION_MACH_SERVICE_LISTENER) {
-		if (transport->xt_listen(name, &conn->xc_local_port) != 0) {
+		if (transport->xt_listen(path, &conn->xc_local_port) != 0) {
 			debugf("Cannot create local port: %s", strerror(errno));
 			return (NULL);
 		}
@@ -102,7 +100,7 @@ ipc_connection_create_mach_service(const char *name, dispatch_queue_t targetq,
 		return ((ipc_connection_t)conn);
 	}
 
-	if (transport->xt_lookup(name, &conn->xc_local_port, &conn->xc_remote_port) != 0) {
+	if (transport->xt_lookup(path, &conn->xc_local_port) != 0) {
 		return (NULL);
 	}
 
@@ -115,7 +113,7 @@ ipc_connection_create_tcp_service(const char *ip, uint16_t port, dispatch_queue_
     struct ipc_transport *transport = ipc_get_transport();
     struct ipc_connection *conn;
 
-    conn = (struct ipc_connection *)ipc_connection_create(ip, targetq);
+    conn = (struct ipc_connection *)ipc_connection_create(targetq);
     if (conn == NULL){
         debugf("ipc_connection_create error");
         return (NULL);
@@ -132,25 +130,12 @@ ipc_connection_create_tcp_service(const char *ip, uint16_t port, dispatch_queue_
         return ((ipc_connection_t)conn);
     }
 
-    if (transport->xt_tcp_lookup(ip, port, &conn->xc_local_port, &conn->xc_remote_port) != 0) {
+    if (transport->xt_tcp_lookup(ip, port, &conn->xc_local_port) != 0) {
         return (NULL);
     }
 
     return ((ipc_connection_t)conn);
 }
-
-//ipc_connection_t
-//ipc_connection_create_from_endpoint(ipc_endpoint_t endpoint)
-//{
-//	struct ipc_connection *conn;
-//
-//	conn = (struct ipc_connection *)ipc_connection_create("anonymous", NULL);
-//	if (conn == NULL)
-//		return (NULL);
-//
-//	conn->xc_remote_port = (ipc_port_t)endpoint;
-//	return ((ipc_connection_t)conn);
-//}
 
 void
 ipc_connection_set_target_queue(ipc_connection_t xconn,
@@ -209,8 +194,7 @@ ipc_connection_resume(ipc_connection_t xconn)
 }
 
 void
-ipc_connection_send_message(ipc_connection_t xconn,
-    ipc_object_t message)
+ipc_connection_send_message(ipc_connection_t xconn, ipc_object_t message)
 {
 	struct ipc_connection *conn;
 	uint64_t id;
@@ -219,7 +203,7 @@ ipc_connection_send_message(ipc_connection_t xconn,
 	id = ipc_dictionary_get_uint64(message, XPC_SEQID);
 
     if (id == 0){
-        id = XPC_CONNECTION_NEXT_ID(conn);
+        id = (uint64_t)XPC_CONNECTION_NEXT_ID(conn);
     }
 
     ipc_retain(message);
@@ -231,15 +215,14 @@ ipc_connection_send_message(ipc_connection_t xconn,
 }
 
 void
-ipc_connection_send_message_with_reply(ipc_connection_t xconn,
-    ipc_object_t message, dispatch_queue_t targetq, ipc_handler_t handler)
+ipc_connection_send_message_with_reply(ipc_connection_t xconn, ipc_object_t message, dispatch_queue_t targetq, ipc_handler_t handler)
 {
 	struct ipc_connection *conn;
 	struct ipc_pending_call *call;
 
 	conn = (struct ipc_connection *)xconn;
 	call = malloc(sizeof(struct ipc_pending_call));
-	call->xp_id = XPC_CONNECTION_NEXT_ID(conn);
+	call->xp_id = (uint64_t)XPC_CONNECTION_NEXT_ID(conn);
 	call->xp_handler = handler;
     call->xp_queue = targetq?:conn->xc_target_queue;
 	TAILQ_INSERT_TAIL(&conn->xc_pending, call, xp_link);
@@ -253,8 +236,7 @@ ipc_connection_send_message_with_reply(ipc_connection_t xconn,
 }
 
 ipc_object_t
-ipc_connection_send_message_with_reply_sync(ipc_connection_t conn,
-    ipc_object_t message)
+ipc_connection_send_message_with_reply_sync(ipc_connection_t conn, ipc_object_t message)
 {
 	__block ipc_object_t result;
 	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
@@ -318,8 +300,7 @@ ipc_send(ipc_connection_t xconn, ipc_object_t message, uint64_t id)
 	struct ipc_connection *conn;
     debugf("connection=%p, message=%p, id=%llu", xconn, message, id);
 	conn = (struct ipc_connection *)xconn;
-	if (ipc_pipe_send(message, id, conn->xc_local_port,
-	    conn->xc_remote_port) != 0)
+	if (ipc_pipe_send(message, id, conn->xc_local_port) != 0)
 		debugf("send failed: %s", strerror(errno));
 }
 
@@ -332,7 +313,7 @@ ipc_connection_get_peer(void *context, ipc_port_t port)
 	conn = context;
 	TAILQ_FOREACH(peer, &conn->xc_peers, xc_link) {
 		if (transport->xt_port_compare(port,
-		    peer->xc_remote_port)) {
+		    peer->xc_local_port)) {
 			return (peer);
 		}
 	}
@@ -341,16 +322,14 @@ ipc_connection_get_peer(void *context, ipc_port_t port)
 }
 
 void *
-ipc_connection_new_peer(void *context, ipc_port_t local, ipc_port_t remote, dispatch_source_t src)
+ipc_connection_new_peer(void *context, ipc_port_t local, dispatch_source_t src)
 {
-//	struct ipc_transport *transport = ipc_get_transport();
 	struct ipc_connection *conn, *peer;
 
 	conn = context;
-	peer = (struct ipc_connection *)ipc_connection_create(NULL, NULL);
+	peer = (struct ipc_connection *)ipc_connection_create(conn->xc_target_queue);
 	peer->xc_parent = conn;
 	peer->xc_local_port = local;
-	peer->xc_remote_port = remote;
 	peer->xc_recv_source = src;
 
 	TAILQ_INSERT_TAIL(&conn->xc_peers, peer, xc_link);
@@ -420,17 +399,14 @@ ipc_connection_recv_message(void *context)
 {
 //	struct ipc_pending_call *call;
 	struct ipc_connection *conn;
-	struct ipc_credentials creds;
 	ipc_object_t result;
-	ipc_port_t remote;
 	uint64_t id;
 	int err;
 
 	debugf("connection=%p", context);
 
 	conn = context;
-	err = ipc_pipe_receive(conn->xc_local_port, &remote, &result, &id,
-	    &creds);
+	err = ipc_pipe_receive(conn->xc_local_port, &result, &id);
 
     if (err < 0){
         return;
@@ -442,9 +418,7 @@ ipc_connection_recv_message(void *context)
 	}
 
 	debugf("msg=%p, id=%llu", result, id);
-
-	conn->xc_creds = creds;
-
+    
 	ipc_connection_dispatch_callback(conn, result, id);
     ipc_release(result);
 }

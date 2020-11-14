@@ -42,27 +42,19 @@
 #include "ipc_base.h"
 #include "ipc_internal.h"
 
-//#define SOCKET_DIR "/var/run/xpc"
-
-static int unix_lookup(const char *path, ipc_port_t *local, ipc_port_t *remote);
+static int unix_lookup(const char *path, ipc_port_t *local);
 static int unix_listen(const char *path, ipc_port_t *port);
 static int unix_tcp_listen(const char *ip, uint16_t port, ipc_port_t *fd);
-static int unix_tcp_lookup(const char *ip, uint16_t port, ipc_port_t *fd, ipc_port_t *unused __unused);
+static int unix_tcp_lookup(const char *ip, uint16_t port, ipc_port_t *fd);
 static int unix_release(ipc_port_t port);
-//static char *unix_port_to_string(ipc_port_t port);
 static int unix_port_compare(ipc_port_t p1, ipc_port_t p2);
-static dispatch_source_t unix_create_client_source(ipc_port_t port, void *,
-    dispatch_queue_t tq);
-static dispatch_source_t unix_create_server_source(ipc_port_t port, void *,
-    dispatch_queue_t tq);
-static size_t unix_send(ipc_port_t local, ipc_port_t remote, void *buf,
-    size_t len, struct ipc_resource *res, size_t nres);
-static size_t unix_recv(ipc_port_t local, ipc_port_t *remote, void *buf,
-    size_t len, struct ipc_resource **res, size_t *nres,
-    struct ipc_credentials *creds);
+static dispatch_source_t unix_create_client_source(ipc_port_t port, void *, dispatch_queue_t tq);
+static dispatch_source_t unix_create_server_source(ipc_port_t port, void *, dispatch_queue_t tq);
+static size_t unix_send(ipc_port_t local, void *buf, size_t len);
+static size_t unix_recv(ipc_port_t local, void *buf, size_t len);
 
 static int
-unix_tcp_lookup(const char *ip, uint16_t port, ipc_port_t *fd, ipc_port_t *unused __unused)
+unix_tcp_lookup(const char *ip, uint16_t port, ipc_port_t *fd)
 {
     int ret;
     struct sockaddr_in addr;
@@ -116,7 +108,7 @@ unix_tcp_listen(const char *ip, uint16_t port, ipc_port_t *fd)
 }
 
 static int
-unix_lookup(const char *path, ipc_port_t *port, ipc_port_t *unused __unused)
+unix_lookup(const char *path, ipc_port_t *port)
 {
 	struct sockaddr_un addr;
 	int ret;
@@ -191,22 +183,6 @@ unix_release(ipc_port_t port)
 	return (0);
 }
 
-//static char *
-//unix_port_to_string(ipc_port_t port)
-//{
-//	int fd = (int)port;
-//	char *ret;
-//
-//	if (fd == -1) {
-//		asprintf(&ret, "<invalid>");
-//		return (ret);
-//	}
-//
-//
-//	asprintf(&ret, "<%d>", fd);
-//	return (ret);
-//}
-
 static int
 unix_port_compare(ipc_port_t p1, ipc_port_t p2)
 {
@@ -237,7 +213,6 @@ static dispatch_source_t
 unix_create_server_source(ipc_port_t port, void *context, dispatch_queue_t tq)
 {
 	int fd = (int)port;
-//	void *client_ctx;
 	dispatch_source_t ret;
 
 	ret = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ,
@@ -251,82 +226,23 @@ unix_create_server_source(ipc_port_t port, void *context, dispatch_queue_t tq)
 	    	sock = accept(fd, NULL, NULL);
 	    	client_port = (ipc_port_t)(long)sock;
 	    	client_source = unix_create_client_source(client_port, NULL, tq);
-	    	ipc_connection_new_peer(context, client_port, NULL, client_source);
+	    	ipc_connection_new_peer(context, client_port, NULL);
 	});
 	return (ret);
 }
 
 static size_t
-unix_send(ipc_port_t local, ipc_port_t remote __unused, void *buf, size_t len,
-    struct ipc_resource *res, size_t nres)
+unix_send(ipc_port_t local, void *buf, size_t len)
 {
 	int fd = (int)local;
 	struct msghdr msg;
-//    struct cmsghdr *cmsg;
     struct iovec iov = { .iov_base = buf, .iov_len = len };
-//    int i, nfds = 0;
 
-    debugf("local=%d, remote=%d, msg=%p, size=%ld",
-        local, remote,
-        buf, len);
+    debugf("local=%d, remote=%d, msg=%p, size=%ld", (int)local, buf, len);
 
     memset(&msg, 0, sizeof(struct msghdr));
     msg.msg_iov = &iov;
     msg.msg_iovlen = 1;
-//
-//#ifdef __APPLE__
-//    for (i = 0; i < nres; i++) {
-//        if (res[i].xr_type == XPC_RESOURCE_FD)
-//            nfds++;
-//    }
-//
-//    if (nres > 0) {
-//        int *fds;
-//
-//        msg.msg_controllen = CMSG_SPACE(nfds * sizeof(int));
-//        msg.msg_control = malloc(msg.msg_controllen);
-//        cmsg = CMSG_FIRSTHDR(&msg);
-//        cmsg->cmsg_type = SCM_RIGHTS;
-//        cmsg->cmsg_level = SOL_SOCKET;
-//        cmsg->cmsg_len = CMSG_LEN(nres * sizeof(int));
-//        fds = (int *)CMSG_DATA(cmsg);
-//        for (i = 0; i < nres; i++) {
-//            if (res[i].xr_type == XPC_RESOURCE_FD)
-//                *fds++ = res[i].xr_fd;
-//        }
-//    }
-//#else
-//    msg.msg_controllen = CMSG_SPACE(sizeof(struct cmsgcred));
-//    msg.msg_control = malloc(msg.msg_controllen);
-//
-//    cmsg = CMSG_FIRSTHDR(&msg);
-//    cmsg->cmsg_type = SCM_CREDS;
-//    cmsg->cmsg_level = SOL_SOCKET;
-//    cmsg->cmsg_len = CMSG_LEN(sizeof(struct cmsgcred));
-//
-//    for (i = 0; i < nres; i++) {
-//        if (res[i].xr_type == XPC_RESOURCE_FD)
-//            nfds++;
-//    }
-//
-//    if (nres > 0) {
-//        int *fds;
-//
-//        msg.msg_controllen = CMSG_SPACE(sizeof(struct cmsgcred)) +
-//            CMSG_SPACE(nfds * sizeof(int));
-//        msg.msg_control = realloc(msg.msg_control, msg.msg_controllen);
-//        cmsg = CMSG_NXTHDR(&msg, cmsg);
-//        cmsg->cmsg_type = SCM_RIGHTS;
-//        cmsg->cmsg_level = SOL_SOCKET;
-//        cmsg->cmsg_len = CMSG_LEN(nres * sizeof(int));
-//        fds = (int *)CMSG_DATA(cmsg);
-//
-//        for (i = 0; i < nres; i++) {
-//            if (res[i].xr_type == XPC_RESOURCE_FD)
-//                *fds++ = res[i].xr_fd;
-//        }
-//    }
-//#endif
     
     if (sendmsg(fd, &msg, 0) < 0)
         return (-1);
@@ -335,16 +251,10 @@ unix_send(ipc_port_t local, ipc_port_t remote __unused, void *buf, size_t len,
 }
 
 static size_t
-unix_recv(ipc_port_t local, ipc_port_t *remote, void *buf, size_t len,
-    struct ipc_resource **res, size_t *nres, struct ipc_credentials *creds)
+unix_recv(ipc_port_t local, void *buf, size_t len)
 {
 	int fd = (int)local;
 	struct msghdr msg;
-//    struct cmsghdr *cmsg;
-    
-//#ifndef __APPLE__
-//    struct cmsgcred *recv_creds = NULL;
-//#endif
     
     memset(&msg, 0, sizeof(struct msghdr));
     struct iovec iov = { .iov_base = buf, .iov_len = len };
@@ -363,68 +273,22 @@ unix_recv(ipc_port_t local, ipc_port_t *remote, void *buf, size_t len,
 
     if (recvd == 0)
         return (0);
-//
-//#ifdef __APPLE__
-//    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
-//         cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-//        if (cmsg->cmsg_type == SCM_RIGHTS) {
-//            recv_fds = (int *)CMSG_DATA(cmsg);
-//            recv_fds_count = CMSG_SPACE(cmsg);
-//        }
-//    }
-//#else
-//    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL;
-//         cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-//        if (cmsg->cmsg_type == SCM_CREDS) {
-//            recv_creds = (struct cmsgcred *)CMSG_DATA(cmsg);
-//            continue;
-//        }
-//
-//        if (cmsg->cmsg_type == SCM_RIGHTS) {
-//            recv_fds = (int *)CMSG_DATA(cmsg);
-//            recv_fds_count = CMSG_SPACE(cmsg);
-//        }
-//    }
-//
-//    if (recv_creds != NULL) {
-//        creds->xc_remote_pid = recv_creds->cmcred_pid;
-//        creds->xc_remote_euid = recv_creds->cmcred_euid;
-//        creds->xc_remote_guid = recv_creds->cmcred_gid;
-//        debugf("remote pid=%d, uid=%d, gid=%d", recv_creds->cmcred_pid,
-//            recv_creds->cmcred_uid, recv_creds->cmcred_gid);
-//
-//    }
-//#endif
-//
-//    if (recv_fds != NULL) {
-//        int i;
-//        *res = malloc(sizeof(struct ipc_resource) * recv_fds_count);
-//
-//        for (i = 0; i < recv_fds_count; i++) {
-//            (*res)[i].xr_type = XPC_RESOURCE_FD;
-//            (*res)[i].xr_fd = recv_fds[i];
-//        }
-//    }
 
-    *remote = NULL;
-    debugf("local=%d, remote=%d, msg=%p, len=%ld",
-        local, *remote,
-        buf, recvd);
+    debugf("local=%d, remote=%d, msg=%p, len=%ld", (int)local, buf, recvd);
 
 	return (recvd);
 }
 
 struct ipc_transport unix_transport = {
-    	.xt_name = "unix",
+    .xt_name = "unix",
 	.xt_listen = unix_listen,
 	.xt_lookup = unix_lookup,
     .xt_tcp_listen = unix_tcp_listen,
     .xt_tcp_lookup = unix_tcp_lookup,
 	.xt_release = unix_release,
-//    	.xt_port_to_string = unix_port_to_string,
-    	.xt_port_compare = unix_port_compare,
-    	.xt_create_server_source = unix_create_server_source,
-    	.xt_create_client_source = unix_create_client_source,
+    .xt_port_compare = unix_port_compare,
+    .xt_create_server_source = unix_create_server_source,
+    .xt_create_client_source = unix_create_client_source,
 	.xt_send = unix_send,
 	.xt_recv = unix_recv
 };

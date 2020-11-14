@@ -68,8 +68,6 @@
 
 struct ipc_object;
 struct ipc_dict_pair;
-struct ipc_resource;
-struct ipc_credentials;
 
 TAILQ_HEAD(ipc_dict_head, ipc_dict_pair);
 TAILQ_HEAD(ipc_array_head, ipc_object);
@@ -77,18 +75,14 @@ TAILQ_HEAD(ipc_array_head, ipc_object);
 typedef void *ipc_port_t;
 typedef void (*ipc_transport_init_t)(void);
 typedef int (*ipc_transport_listen_t)(const char *, ipc_port_t *);
-typedef int (*ipc_transport_lookup)(const char *, ipc_port_t *, ipc_port_t *);
+typedef int (*ipc_transport_lookup)(const char *, ipc_port_t *);
 typedef int (*ipc_transport_tcp_listen_t)(const char *, uint16_t, ipc_port_t *);
-typedef int (*ipc_transport_tcp_lookup)(const char *, uint16_t, ipc_port_t *, ipc_port_t *);
-typedef char *(*ipc_transport_port_to_string)(ipc_port_t);
+typedef int (*ipc_transport_tcp_lookup)(const char *, uint16_t, ipc_port_t *);
 typedef int (*ipc_transport_port_compare)(ipc_port_t, ipc_port_t);
 typedef int (*ipc_transport_release)(ipc_port_t);
-typedef int (*ipc_transport_send)(ipc_port_t, ipc_port_t, void *buf,
-    size_t len, struct ipc_resource *, size_t);
-typedef int(*ipc_transport_recv)(ipc_port_t, ipc_port_t*, void *buf,
-    size_t len, struct ipc_resource **, size_t *, struct ipc_credentials *);
-typedef dispatch_source_t (*ipc_transport_create_source)(ipc_port_t,
-    void *, dispatch_queue_t);
+typedef size_t (*ipc_transport_send)(ipc_port_t, void *buf, size_t len);
+typedef size_t (*ipc_transport_recv)(ipc_port_t, void *buf, size_t len);
+typedef dispatch_source_t (*ipc_transport_create_source)(ipc_port_t, void *, dispatch_queue_t);
 
 typedef union {
 	struct ipc_dict_head dict;
@@ -134,16 +128,8 @@ struct ipc_pending_call {
 	TAILQ_ENTRY(ipc_pending_call) xp_link;
 };
 
-struct ipc_credentials {
-    uid_t			xc_remote_euid;
-    gid_t			xc_remote_guid;
-    pid_t			xc_remote_pid;
-};
-
 struct ipc_connection {
-	const char *		xc_name;
 	ipc_port_t		xc_local_port;
-    ipc_port_t		xc_remote_port;
 	ipc_handler_t		xc_handler;
 	dispatch_source_t	xc_recv_source;
 	dispatch_queue_t	 xc_send_queue;
@@ -155,7 +141,6 @@ struct ipc_connection {
 	volatile uint64_t	xc_last_id;
 	void *			xc_context;
 	struct ipc_connection * xc_parent;
-    struct ipc_credentials	xc_creds;
 	TAILQ_HEAD(, ipc_pending_call) xc_pending;
 	TAILQ_HEAD(, ipc_connection) xc_peers;
 	TAILQ_ENTRY(ipc_connection) xc_link;
@@ -206,22 +191,16 @@ struct ipc_service {
 
 struct ipc_transport *ipc_get_transport(void);
 void ipc_set_transport(struct ipc_transport *);
-struct ipc_object *_ipc_prim_create(int type, ipc_u value,
-    size_t size);
-struct ipc_object *_ipc_prim_create_flags(int type,
-    ipc_u value, size_t size, uint16_t flags);
+struct ipc_object *_ipc_prim_create(int type, ipc_u value, size_t size);
+struct ipc_object *_ipc_prim_create_flags(int type, ipc_u value, size_t size, uint16_t flags);
 const char *_ipc_get_type_name(ipc_object_t obj);
 struct ipc_object *mpack2xpc(mpack_node_t node);
 void xpc2mpack(mpack_writer_t *writer, ipc_object_t xo);
 void ipc_object_destroy(struct ipc_object *xo);
 void ipc_connection_recv_message(void *);
-//void ipc_connection_recv_mach_message(void *);
-void *ipc_connection_new_peer(void *context,
-    ipc_port_t local, ipc_port_t remote, dispatch_source_t src);
+void *ipc_connection_new_peer(void *context, ipc_port_t local, dispatch_source_t src);
 void ipc_connection_destroy_peer(void *context);
-int ipc_pipe_send(ipc_object_t obj, uint64_t id,
-    ipc_port_t local, ipc_port_t remote);
-int ipc_pipe_receive(ipc_port_t local, ipc_port_t *remote,
-    ipc_object_t *result, uint64_t *id, struct ipc_credentials *creds);
+int ipc_pipe_send(ipc_object_t obj, uint64_t id, ipc_port_t local);
+int ipc_pipe_receive(ipc_port_t local, ipc_object_t *result, uint64_t *id);
 
 #endif	/* _LIBXPC_XPC_INTERNAL_H */

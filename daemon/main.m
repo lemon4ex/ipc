@@ -65,7 +65,7 @@ int main(int argc, const char *argv[])
 //        }
         // SOCKET_DIR"/net.ymlab.dev.daemon"
 #if CONNECTION_TYPE == 0
-        ipc_connection_t service = ipc_connection_create_mach_service(SOCKET_DIR"/net.ymlab.dev.daemon", dispatch_get_main_queue(), XPC_CONNECTION_MACH_SERVICE_LISTENER);
+        ipc_connection_t service = ipc_connection_create_uds_service(SOCKET_DIR"/net.ymlab.dev.daemon", dispatch_get_main_queue(), XPC_CONNECTION_MACH_SERVICE_LISTENER);
 #else
         ipc_connection_t service = ipc_connection_create_tcp_service("127.0.0.1", 8998 , dispatch_get_main_queue(), XPC_CONNECTION_MACH_SERVICE_LISTENER);
 #endif
@@ -83,7 +83,7 @@ int main(int argc, const char *argv[])
     }else if(!strcmp(argv[1], "-c")){
         static ipc_connection_t client = NULL;
 #if CONNECTION_TYPE == 0
-        client = ipc_connection_create_mach_service(SOCKET_DIR"/net.ymlab.dev.daemon", dispatch_get_main_queue(), 0);
+        client = ipc_connection_create_uds_service(SOCKET_DIR"/net.ymlab.dev.daemon", dispatch_get_main_queue(), 0);
 #else
         client = ipc_connection_create_tcp_service("127.0.0.1", 8998 , dispatch_get_main_queue(), 0);
 #endif

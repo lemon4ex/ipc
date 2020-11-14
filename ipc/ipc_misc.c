@@ -269,7 +269,7 @@ ipc_copy_description(ipc_object_t obj)
 //}
 
 int
-ipc_pipe_send(ipc_object_t xobj, uint64_t id, ipc_port_t local, ipc_port_t remote)
+ipc_pipe_send(ipc_object_t xobj, uint64_t id, ipc_port_t local)
 {
 	struct ipc_transport *transport = ipc_get_transport();
 	void *buf;
@@ -282,7 +282,7 @@ ipc_pipe_send(ipc_object_t xobj, uint64_t id, ipc_port_t local, ipc_port_t remot
 		return (-1);
 	}
 
-	if (transport->xt_send(local, remote, buf, size, NULL, 0) != 0) {
+	if (transport->xt_send(local, buf, size) != 0) {
 		debugf("transport send function failed: %s", strerror(errno));
         free(buf);
 		return (-1);
@@ -293,8 +293,7 @@ ipc_pipe_send(ipc_object_t xobj, uint64_t id, ipc_port_t local, ipc_port_t remot
 }
 
 int
-ipc_pipe_receive(ipc_port_t local, ipc_port_t *remote, ipc_object_t *result,
-    uint64_t *id, struct ipc_credentials *creds)
+ipc_pipe_receive(ipc_port_t local, ipc_object_t *result, uint64_t *id)
 {
 	struct ipc_transport *transport = ipc_get_transport();
 	struct ipc_resource *resources;
@@ -305,8 +304,7 @@ ipc_pipe_receive(ipc_port_t local, ipc_port_t *remote, ipc_object_t *result,
 
 	buffer = malloc(RECV_BUFFER_SIZE);
 
-	ret = transport->xt_recv(local, remote, buffer, RECV_BUFFER_SIZE,
-	    &resources, &nresources, creds);
+	ret = transport->xt_recv(local, buffer, RECV_BUFFER_SIZE);
 	if (ret < 0) {
 		debugf("transport receive function failed: %s", strerror(errno));
         free(buffer);

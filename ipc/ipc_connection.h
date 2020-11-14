@@ -29,9 +29,9 @@ XPC_EXPORT const struct _ipc_dictionary_s _ipc_error_termination_imminent;
 
 typedef void (*ipc_finalizer_t)(void *value);
 
-ipc_connection_t ipc_connection_create(const char *name, dispatch_queue_t targetq);
+ipc_connection_t ipc_connection_create(dispatch_queue_t targetq);
 
-ipc_connection_t ipc_connection_create_mach_service(const char *name, dispatch_queue_t targetq, uint64_t flags);
+ipc_connection_t ipc_connection_create_uds_service(const char *path, dispatch_queue_t targetq, uint64_t flags);
 
 ipc_connection_t ipc_connection_create_tcp_service(const char *ip, uint16_t port, dispatch_queue_t targetq, uint64_t flags);
 
