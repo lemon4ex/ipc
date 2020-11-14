@@ -20,8 +20,7 @@ static void daemon_peer_event_handler(xpc_lite_connection_t peer, xpc_lite_objec
             // the connection is in an invalid state, and you do not need to
             // call xpc_lite_connection_cancel(). Just tear down any associated state
             // here.
-        } else if (event == XPC_ERROR_TERMINATION_IMMINENT) {
-            // Handle per-connection termination cleanup.
+            NSLog(@"connection closed");
         }
     } else {
         assert(type == XPC_TYPE_DICTIONARY);
@@ -59,11 +58,10 @@ static void daemon_event_handler(xpc_lite_connection_t peer)
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     // net.ymlab.dev.daemon
-    NSString *name = [NSSearchPathForDirectoriesInDomains(9, 1, 1)[0] stringByAppendingPathComponent:@"daemon"];
+//    NSString *name = [NSSearchPathForDirectoriesInDomains(9, 1, 1)[0] stringByAppendingPathComponent:@"daemon"];
     static xpc_lite_connection_t service = NULL;
-    service = xpc_lite_connection_create_mach_service(name.UTF8String,
-                                                                  dispatch_get_main_queue(),
-                                                                  XPC_CONNECTION_MACH_SERVICE_LISTENER);
+//    service = xpc_lite_connection_create_mach_service(name.UTF8String, dispatch_get_main_queue(), XPC_CONNECTION_MACH_SERVICE_LISTENER);
+    service = xpc_lite_connection_create_tcp_service("127.0.0.1", 8998 , dispatch_get_main_queue(), XPC_CONNECTION_MACH_SERVICE_LISTENER);
 
     if (!service) {
         NSLog(@"Failed to create service.");
@@ -76,25 +74,35 @@ static void daemon_event_handler(xpc_lite_connection_t peer)
 
     xpc_lite_connection_resume(service);
     
-    static xpc_lite_connection_t client = NULL;
-    client = xpc_lite_connection_create_mach_service(name.UTF8String, dispatch_get_main_queue(), 0);
-    xpc_lite_connection_set_event_handler(client, ^(xpc_lite_object_t object){
-        double result = xpc_lite_dictionary_get_double(object, "result");
-        NSLog(@"%f",result);
-    });
-    xpc_lite_connection_resume(client);
-    static dispatch_source_t timer;
-    static xpc_lite_object_t dictionary;
-    timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
-    dispatch_source_set_timer(timer, DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC, 0 * NSEC_PER_SEC);
-    dispatch_source_set_event_handler(timer, ^{
-        dictionary = xpc_lite_dictionary_create(NULL, NULL, 0);
-        xpc_lite_dictionary_set_double(dictionary, "value1", 1.0);
-        xpc_lite_dictionary_set_double(dictionary, "value2", 2.0);
-        xpc_lite_connection_send_message(client, dictionary);
-        xpc_lite_release(dictionary);
-    });
-    dispatch_resume(timer);
+//    static xpc_lite_connection_t client = NULL;
+////    client = xpc_lite_connection_create_mach_service(name.UTF8String, dispatch_get_main_queue(), 0);
+//    client = xpc_lite_connection_create_tcp_service("127.0.0.1", 8998 , dispatch_get_main_queue(), 0);
+//    xpc_lite_connection_set_event_handler(client, ^(xpc_lite_object_t object){
+//        double result = xpc_lite_dictionary_get_double(object, "result");
+//        NSLog(@"%f",result);
+//    });
+//    xpc_lite_connection_resume(client);
+//
+//    static xpc_lite_object_t dictionary;
+////    static dispatch_source_t timer;
+////    timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
+////    dispatch_source_set_timer(timer, DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC, 0 * NSEC_PER_SEC);
+////    dispatch_source_set_event_handler(timer, ^{
+////        dictionary = xpc_lite_dictionary_create(NULL, NULL, 0);
+////        xpc_lite_dictionary_set_double(dictionary, "value1", 1.0);
+////        xpc_lite_dictionary_set_double(dictionary, "value2", 2.0);
+////        xpc_lite_connection_send_message(client, dictionary);
+////        xpc_lite_release(dictionary);
+////    });
+////    dispatch_resume(timer);
+//    dictionary = xpc_lite_dictionary_create(NULL, NULL, 0);
+//    xpc_lite_dictionary_set_double(dictionary, "value1", 1.0);
+//    xpc_lite_dictionary_set_double(dictionary, "value2", 2.0);
+//    xpc_lite_connection_send_message_with_reply(client, dictionary, NULL, ^(xpc_lite_object_t object) {
+//        double result = xpc_lite_dictionary_get_double(object, "result");
+//        NSLog(@"%f",result);
+//    });
+//    xpc_lite_release(dictionary);
     
     return YES;
 }
