@@ -153,7 +153,7 @@ struct xpc_lite_credentials {
 struct xpc_lite_connection {
 	const char *		xc_name;
 	xpc_lite_port_t		xc_local_port;
-    	xpc_lite_port_t		xc_remote_port;
+    xpc_lite_port_t		xc_remote_port;
 	xpc_lite_handler_t		xc_handler;
 	dispatch_source_t	xc_recv_source;
 	dispatch_queue_t	 xc_send_queue;
@@ -214,7 +214,7 @@ struct xpc_lite_service {
 #define xo_array xo_u.array
 #define xo_dict xo_u.dict
 
-__private_extern__ struct xpc_lite_transport *xpc_lite_get_transport();
+__private_extern__ struct xpc_lite_transport *xpc_lite_get_transport(void);
 __private_extern__ void xpc_lite_set_transport(struct xpc_lite_transport *);
 __private_extern__ struct xpc_lite_object *_xpc_lite_prim_create(int type, xpc_lite_u value,
     size_t size);

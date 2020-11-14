@@ -136,18 +136,18 @@ xpc_lite_connection_create_tcp_service(const char *ip, uint16_t port, dispatch_q
     return ((xpc_lite_connection_t)conn);
 }
 
-xpc_lite_connection_t
-xpc_lite_connection_create_from_endpoint(xpc_lite_endpoint_t endpoint)
-{
-	struct xpc_lite_connection *conn;
-
-	conn = (struct xpc_lite_connection *)xpc_lite_connection_create("anonymous", NULL);
-	if (conn == NULL)
-		return (NULL);
-
-	conn->xc_remote_port = (xpc_lite_port_t)endpoint;
-	return ((xpc_lite_connection_t)conn);
-}
+//xpc_lite_connection_t
+//xpc_lite_connection_create_from_endpoint(xpc_lite_endpoint_t endpoint)
+//{
+//	struct xpc_lite_connection *conn;
+//
+//	conn = (struct xpc_lite_connection *)xpc_lite_connection_create("anonymous", NULL);
+//	if (conn == NULL)
+//		return (NULL);
+//
+//	conn->xc_remote_port = (xpc_lite_port_t)endpoint;
+//	return ((xpc_lite_connection_t)conn);
+//}
 
 void
 xpc_lite_connection_set_target_queue(xpc_lite_connection_t xconn,
@@ -193,7 +193,7 @@ xpc_lite_connection_resume(xpc_lite_connection_t xconn)
 	if (conn->xc_flags & XPC_CONNECTION_MACH_SERVICE_LISTENER) {
 		conn->xc_recv_source = transport->xt_create_server_source(
 		    conn->xc_local_port, conn, conn->xc_recv_queue);
-        dispatch_resume(conn->xc_recv_source);
+            dispatch_resume(conn->xc_recv_source);
 	} else {
 		if (conn->xc_parent == NULL) {
 			conn->xc_recv_source = transport->xt_create_client_source(
@@ -278,7 +278,10 @@ xpc_lite_connection_send_barrier(xpc_lite_connection_t xconn, dispatch_block_t b
 void
 xpc_lite_connection_cancel(xpc_lite_connection_t connection)
 {
+    struct xpc_lite_connection *conn;
 
+    conn = (struct xpc_lite_connection *)xconn;
+    dispatch_source_cancel(conn->xc_recv_source);
 }
 
 const char *
