@@ -49,7 +49,7 @@ static void daemon_event_handler(ipc_connection_t peer)
 	ipc_connection_resume(peer);
 }
 
-#define CONNECTION_TYPE 0 // 0：UDS，1：TCP
+#define CONNECTION_TYPE 1 // 0：UDS，1：TCP
 
 #define SOCKET_DIR "/var/run/xpc"
 
@@ -87,9 +87,22 @@ int main(int argc, const char *argv[])
 #else
         client = ipc_connection_create_tcp_service("127.0.0.1", 8998 , dispatch_get_main_queue(), 0);
 #endif
-        ipc_connection_set_event_handler(client, ^(ipc_object_t object){
-            double result = ipc_dictionary_get_double(object, "result");
-            NSLog(@"%f",result);
+        ipc_connection_set_event_handler(client, ^(ipc_object_t event){
+            ipc_type_t type = ipc_get_type(event);
+            if (type == XPC_TYPE_ERROR) {
+                if (event == XPC_ERROR_CONNECTION_INVALID) {
+                    // The client process on the other end of the connection has either
+                    // crashed or cancelled the connection. After receiving this error,
+                    // the connection is in an invalid state, and you do not need to
+                    // call ipc_connection_cancel(). Just tear down any associated state
+                    // here.
+                    NSLog(@"connection closed");
+                }
+            } else {
+                assert(type == XPC_TYPE_DICTIONARY);
+                double result = ipc_dictionary_get_double(event, "result");
+                NSLog(@"%f",result);
+            }
         });
         ipc_connection_resume(client);
         static dispatch_source_t timer;

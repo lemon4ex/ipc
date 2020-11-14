@@ -359,7 +359,11 @@ ipc_connection_destroy_peer(void *context)
 		});
 
 		TAILQ_REMOVE(&parent->xc_peers, conn, xc_link);
-	}
+    }else{
+        dispatch_async(conn->xc_target_queue, ^{
+            conn->xc_handler((ipc_object_t)XPC_ERROR_CONNECTION_INVALID);
+        });
+    }
 
 	dispatch_release(conn->xc_recv_source);
 }
