@@ -15,4 +15,7 @@ FOUNDATION_EXPORT double XPCLiteVersionNumber;
 FOUNDATION_EXPORT const unsigned char XPCLiteVersionString[];
 
 // In this header, you should import all the public headers of your framework using statements like #import <XPCLite/PublicHeader.h>
-#import <xpc_lite/xpc.h>
+#import <ipc/ipc_base.h>
+#import <ipc/ipc_connection.h>
+#import <ipc/ipc_array.h>
+#import <ipc/ipc_dictionary.h>

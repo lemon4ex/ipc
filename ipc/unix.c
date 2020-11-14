@@ -39,31 +39,30 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include <dispatch/dispatch.h>
-#include "xpc.h"
-
-#include "../xpc_lite_internal.h"
+#include "ipc_base.h"
+#include "ipc_internal.h"
 
 //#define SOCKET_DIR "/var/run/xpc"
 
-static int unix_lookup(const char *path, xpc_lite_port_t *local, xpc_lite_port_t *remote);
-static int unix_listen(const char *path, xpc_lite_port_t *port);
-static int unix_tcp_listen(const char *ip, uint16_t port, xpc_lite_port_t *fd);
-static int unix_tcp_lookup(const char *ip, uint16_t port, xpc_lite_port_t *fd, xpc_lite_port_t *unused __unused);
-static int unix_release(xpc_lite_port_t port);
-//static char *unix_port_to_string(xpc_lite_port_t port);
-static int unix_port_compare(xpc_lite_port_t p1, xpc_lite_port_t p2);
-static dispatch_source_t unix_create_client_source(xpc_lite_port_t port, void *,
+static int unix_lookup(const char *path, ipc_port_t *local, ipc_port_t *remote);
+static int unix_listen(const char *path, ipc_port_t *port);
+static int unix_tcp_listen(const char *ip, uint16_t port, ipc_port_t *fd);
+static int unix_tcp_lookup(const char *ip, uint16_t port, ipc_port_t *fd, ipc_port_t *unused __unused);
+static int unix_release(ipc_port_t port);
+//static char *unix_port_to_string(ipc_port_t port);
+static int unix_port_compare(ipc_port_t p1, ipc_port_t p2);
+static dispatch_source_t unix_create_client_source(ipc_port_t port, void *,
     dispatch_queue_t tq);
-static dispatch_source_t unix_create_server_source(xpc_lite_port_t port, void *,
+static dispatch_source_t unix_create_server_source(ipc_port_t port, void *,
     dispatch_queue_t tq);
-static size_t unix_send(xpc_lite_port_t local, xpc_lite_port_t remote, void *buf,
-    size_t len, struct xpc_lite_resource *res, size_t nres);
-static size_t unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf,
-    size_t len, struct xpc_lite_resource **res, size_t *nres,
-    struct xpc_lite_credentials *creds);
+static size_t unix_send(ipc_port_t local, ipc_port_t remote, void *buf,
+    size_t len, struct ipc_resource *res, size_t nres);
+static size_t unix_recv(ipc_port_t local, ipc_port_t *remote, void *buf,
+    size_t len, struct ipc_resource **res, size_t *nres,
+    struct ipc_credentials *creds);
 
 static int
-unix_tcp_lookup(const char *ip, uint16_t port, xpc_lite_port_t *fd, xpc_lite_port_t *unused __unused)
+unix_tcp_lookup(const char *ip, uint16_t port, ipc_port_t *fd, ipc_port_t *unused __unused)
 {
     int ret;
     struct sockaddr_in addr;
@@ -79,12 +78,12 @@ unix_tcp_lookup(const char *ip, uint16_t port, xpc_lite_port_t *fd, xpc_lite_por
         return (-1);
     }
 
-    *fd = (xpc_lite_port_t)(long)ret;
+    *fd = (ipc_port_t)(long)ret;
     return (0);
 }
 
 static int
-unix_tcp_listen(const char *ip, uint16_t port, xpc_lite_port_t *fd)
+unix_tcp_listen(const char *ip, uint16_t port, ipc_port_t *fd)
 {
     int ret;
     struct sockaddr_in addr;
@@ -112,12 +111,12 @@ unix_tcp_listen(const char *ip, uint16_t port, xpc_lite_port_t *fd)
         return (-1);
     }
 
-    *fd = (xpc_lite_port_t)(long)ret;
+    *fd = (ipc_port_t)(long)ret;
     return (0);
 }
 
 static int
-unix_lookup(const char *path, xpc_lite_port_t *port, xpc_lite_port_t *unused __unused)
+unix_lookup(const char *path, ipc_port_t *port, ipc_port_t *unused __unused)
 {
 	struct sockaddr_un addr;
 	int ret;
@@ -135,12 +134,12 @@ unix_lookup(const char *path, xpc_lite_port_t *port, xpc_lite_port_t *unused __u
 		return (-1);
 	}
 
-	*port = (xpc_lite_port_t)(long)ret;
+	*port = (ipc_port_t)(long)ret;
 	return (0);
 }
 
 static int
-unix_listen(const char *path, xpc_lite_port_t *port)
+unix_listen(const char *path, ipc_port_t *port)
 {
 	struct sockaddr_un addr;
 //    char *path;
@@ -177,12 +176,12 @@ unix_listen(const char *path, xpc_lite_port_t *port)
 		return (-1);
 	}
 
-	*port = (xpc_lite_port_t)(long)ret;
+	*port = (ipc_port_t)(long)ret;
 	return (0);
 }
 
 static int
-unix_release(xpc_lite_port_t port)
+unix_release(ipc_port_t port)
 {
 	int fd = (int)port;
 
@@ -193,7 +192,7 @@ unix_release(xpc_lite_port_t port)
 }
 
 //static char *
-//unix_port_to_string(xpc_lite_port_t port)
+//unix_port_to_string(ipc_port_t port)
 //{
 //	int fd = (int)port;
 //	char *ret;
@@ -209,13 +208,13 @@ unix_release(xpc_lite_port_t port)
 //}
 
 static int
-unix_port_compare(xpc_lite_port_t p1, xpc_lite_port_t p2)
+unix_port_compare(ipc_port_t p1, ipc_port_t p2)
 {
 	return (int)p1 == (int)p2;
 }
 
 static dispatch_source_t
-unix_create_client_source(xpc_lite_port_t port, void *context, dispatch_queue_t tq)
+unix_create_client_source(ipc_port_t port, void *context, dispatch_queue_t tq)
 {
 	int fd = (int)port;
 	dispatch_source_t ret;
@@ -224,18 +223,18 @@ unix_create_client_source(xpc_lite_port_t port, void *context, dispatch_queue_t 
 	    (uintptr_t)fd, 0, tq);
 
 	dispatch_set_context(ret, context);
-	dispatch_source_set_event_handler_f(ret, xpc_lite_connection_recv_message);
+	dispatch_source_set_event_handler_f(ret, ipc_connection_recv_message);
 	dispatch_source_set_cancel_handler(ret, ^{
 	    shutdown(fd, SHUT_RDWR);
 	    close(fd);
-	    xpc_lite_connection_destroy_peer(dispatch_get_context(ret));
+	    ipc_connection_destroy_peer(dispatch_get_context(ret));
 	});
 
 	return (ret);
 }
 
 static dispatch_source_t
-unix_create_server_source(xpc_lite_port_t port, void *context, dispatch_queue_t tq)
+unix_create_server_source(ipc_port_t port, void *context, dispatch_queue_t tq)
 {
 	int fd = (int)port;
 //	void *client_ctx;
@@ -246,20 +245,20 @@ unix_create_server_source(xpc_lite_port_t port, void *context, dispatch_queue_t 
     dispatch_set_context(ret, context);
 	dispatch_source_set_event_handler(ret, ^{
 	    	int sock;
-	    	xpc_lite_port_t client_port;
+	    	ipc_port_t client_port;
 	    	dispatch_source_t client_source;
 
 	    	sock = accept(fd, NULL, NULL);
-	    	client_port = (xpc_lite_port_t)(long)sock;
+	    	client_port = (ipc_port_t)(long)sock;
 	    	client_source = unix_create_client_source(client_port, NULL, tq);
-	    	xpc_lite_connection_new_peer(context, client_port, NULL, client_source);
+	    	ipc_connection_new_peer(context, client_port, NULL, client_source);
 	});
 	return (ret);
 }
 
 static size_t
-unix_send(xpc_lite_port_t local, xpc_lite_port_t remote __unused, void *buf, size_t len,
-    struct xpc_lite_resource *res, size_t nres)
+unix_send(ipc_port_t local, ipc_port_t remote __unused, void *buf, size_t len,
+    struct ipc_resource *res, size_t nres)
 {
 	int fd = (int)local;
 	struct msghdr msg;
@@ -336,8 +335,8 @@ unix_send(xpc_lite_port_t local, xpc_lite_port_t remote __unused, void *buf, siz
 }
 
 static size_t
-unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf, size_t len,
-    struct xpc_lite_resource **res, size_t *nres, struct xpc_lite_credentials *creds)
+unix_recv(ipc_port_t local, ipc_port_t *remote, void *buf, size_t len,
+    struct ipc_resource **res, size_t *nres, struct ipc_credentials *creds)
 {
 	int fd = (int)local;
 	struct msghdr msg;
@@ -399,7 +398,7 @@ unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf, size_t len,
 //
 //    if (recv_fds != NULL) {
 //        int i;
-//        *res = malloc(sizeof(struct xpc_lite_resource) * recv_fds_count);
+//        *res = malloc(sizeof(struct ipc_resource) * recv_fds_count);
 //
 //        for (i = 0; i < recv_fds_count; i++) {
 //            (*res)[i].xr_type = XPC_RESOURCE_FD;
@@ -415,7 +414,7 @@ unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf, size_t len,
 	return (recvd);
 }
 
-struct xpc_lite_transport unix_transport = {
+struct ipc_transport unix_transport = {
     	.xt_name = "unix",
 	.xt_listen = unix_listen,
 	.xt_lookup = unix_lookup,
