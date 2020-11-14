@@ -397,7 +397,6 @@ ipc_connection_dispatch_callback(struct ipc_connection *conn,
 void
 ipc_connection_recv_message(void *context)
 {
-//	struct ipc_pending_call *call;
 	struct ipc_connection *conn;
 	ipc_object_t result;
 	uint64_t id;

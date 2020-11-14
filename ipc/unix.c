@@ -226,7 +226,7 @@ unix_create_server_source(ipc_port_t port, void *context, dispatch_queue_t tq)
 	    	sock = accept(fd, NULL, NULL);
 	    	client_port = (ipc_port_t)(long)sock;
 	    	client_source = unix_create_client_source(client_port, NULL, tq);
-	    	ipc_connection_new_peer(context, client_port, NULL);
+	    	ipc_connection_new_peer(context, client_port, client_source);
 	});
 	return (ret);
 }
@@ -238,7 +238,7 @@ unix_send(ipc_port_t local, void *buf, size_t len)
 	struct msghdr msg;
     struct iovec iov = { .iov_base = buf, .iov_len = len };
 
-    debugf("local=%d, remote=%d, msg=%p, size=%ld", (int)local, buf, len);
+    debugf("local=%d, msg=%p, size=%ld", (int)local, buf, len);
 
     memset(&msg, 0, sizeof(struct msghdr));
     msg.msg_iov = &iov;
@@ -274,7 +274,7 @@ unix_recv(ipc_port_t local, void *buf, size_t len)
     if (recvd == 0)
         return (0);
 
-    debugf("local=%d, remote=%d, msg=%p, len=%ld", (int)local, buf, recvd);
+    debugf("local=%d, msg=%p, len=%ld", (int)local, buf, recvd);
 
 	return (recvd);
 }
