@@ -107,6 +107,36 @@ xpc_lite_connection_create_mach_service(const char *name, dispatch_queue_t targe
 }
 
 xpc_lite_connection_t
+xpc_lite_connection_create_tcp_service(const char *ip, uint16_t port, dispatch_queue_t targetq, uint64_t flags)
+{
+    struct xpc_lite_transport *transport = xpc_lite_get_transport();
+    struct xpc_lite_connection *conn;
+
+    conn = (struct xpc_lite_connection *)xpc_lite_connection_create(ip, targetq);
+    if (conn == NULL){
+        debugf("xpc_lite_connection_create error");
+        return (NULL);
+    }
+    
+    conn->xc_flags = flags;
+
+    if (flags & XPC_CONNECTION_MACH_SERVICE_LISTENER) {
+        if (transport->xt_tcp_listen(ip, port, &conn->xc_local_port) != 0) {
+            debugf("Cannot create local port: %s", strerror(errno));
+            return (NULL);
+        }
+
+        return ((xpc_lite_connection_t)conn);
+    }
+
+    if (transport->xt_tcp_lookup(ip, port, &conn->xc_local_port, &conn->xc_remote_port) != 0) {
+        return (NULL);
+    }
+
+    return ((xpc_lite_connection_t)conn);
+}
+
+xpc_lite_connection_t
 xpc_lite_connection_create_from_endpoint(xpc_lite_endpoint_t endpoint)
 {
 	struct xpc_lite_connection *conn;
@@ -208,7 +238,7 @@ xpc_lite_connection_send_message_with_reply(xpc_lite_connection_t xconn,
 	call = malloc(sizeof(struct xpc_lite_pending_call));
 	call->xp_id = XPC_CONNECTION_NEXT_ID(conn);
 	call->xp_handler = handler;
-	call->xp_queue = targetq;
+    call->xp_queue = targetq?:conn->xc_target_queue;
 	TAILQ_INSERT_TAIL(&conn->xc_pending, call, xp_link);
 
     xpc_lite_retain(message);
@@ -449,7 +479,7 @@ xpc_lite_connection_dispatch_callback(struct xpc_lite_connection *conn,
 	TAILQ_FOREACH(call, &conn->xc_pending, xp_link) {
 		if (call->xp_id == id) {
             xpc_lite_retain(result);
-			dispatch_async(conn->xc_target_queue, ^{
+			dispatch_async(call->xp_queue, ^{
 			    call->xp_handler(result);
                 xpc_lite_release(result);
 			    TAILQ_REMOVE(&conn->xc_pending, call,

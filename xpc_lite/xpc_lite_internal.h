@@ -75,9 +75,11 @@ TAILQ_HEAD(xpc_lite_dict_head, xpc_lite_dict_pair);
 TAILQ_HEAD(xpc_lite_array_head, xpc_lite_object);
 
 typedef void *xpc_lite_port_t;
-typedef void (*xpc_lite_transport_init_t)();
+typedef void (*xpc_lite_transport_init_t)(void);
 typedef int (*xpc_lite_transport_listen_t)(const char *, xpc_lite_port_t *);
 typedef int (*xpc_lite_transport_lookup)(const char *, xpc_lite_port_t *, xpc_lite_port_t *);
+typedef int (*xpc_lite_transport_tcp_listen_t)(const char *, uint16_t, xpc_lite_port_t *);
+typedef int (*xpc_lite_transport_tcp_lookup)(const char *, uint16_t, xpc_lite_port_t *, xpc_lite_port_t *);
 typedef char *(*xpc_lite_transport_port_to_string)(xpc_lite_port_t);
 typedef int (*xpc_lite_transport_port_compare)(xpc_lite_port_t, xpc_lite_port_t);
 typedef int (*xpc_lite_transport_release)(xpc_lite_port_t);
@@ -184,6 +186,8 @@ struct xpc_lite_transport {
     	xpc_lite_transport_init_t 	xt_init;
     	xpc_lite_transport_listen_t 	xt_listen;
     	xpc_lite_transport_lookup 	xt_lookup;
+        xpc_lite_transport_tcp_listen_t     xt_tcp_listen;
+        xpc_lite_transport_tcp_lookup     xt_tcp_lookup;
 //    	xpc_lite_transport_port_to_string xt_port_to_string;
     	xpc_lite_transport_port_compare xt_port_compare;
     	xpc_lite_transport_release 	xt_release;

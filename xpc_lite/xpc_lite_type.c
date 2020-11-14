@@ -27,6 +27,7 @@
 
 #include <sys/types.h>
 #include <time.h>
+#include <sys/time.h>
 #include "xpc/xpc.h"
 #include "xpc_lite_internal.h"
 
@@ -61,13 +62,20 @@ xb _xpc_lite_bool_true;
 xb _xpc_lite_bool_false;
 
 struct _xpc_lite_dictionary_s {
+    
 };
 
-typedef const struct _xpc_lite_dictionary_s xs;
-xs _xpc_lite_error_connection_interrupted;
-xs _xpc_lite_error_connection_invalid;
-xs _xpc_lite_error_connection_imminent;
-xs _xpc_lite_error_termination_imminent;
+//typedef const struct _xpc_lite_dictionary_s xs;
+typedef const struct xpc_lite_object xs;
+//xs _xpc_lite_error_connection_interrupted = {};
+xs _xpc_lite_error_connection_invalid = {
+    .xo_size = 0,
+    .xo_xpc_lite_type = _XPC_TYPE_ERROR,
+    .xo_flags = 0,
+    .xo_u = { 0 },
+    .xo_refcnt = 1};
+//xs _xpc_lite_error_connection_imminent;
+//xs _xpc_lite_error_termination_imminent;
 
 static size_t xpc_lite_data_hash(const uint8_t *data, size_t length);
 
@@ -257,11 +265,18 @@ xpc_lite_object_t
 xpc_lite_date_create_from_current(void)
 {
 	xpc_lite_u val = {0};
-	struct timespec tp;
+	
+    if (__builtin_available(iOS 10.0, *)) {
+        struct timespec tp;
+        clock_gettime(CLOCK_REALTIME, &tp);
+        val.ui = *(uint64_t *)&tp;
+    } else {
+        struct timeval tv;
+        gettimeofday(&tv,NULL);
+        val.ui = (uint64_t)tv.tv_sec * 1000 + (uint64_t)tv.tv_usec / 1000;
+    }
 
-	clock_gettime(CLOCK_REALTIME, &tp);
-
-	val.ui = *(uint64_t *)&tp;
+	
 	return _xpc_lite_prim_create(_XPC_TYPE_DATE, val, 1);
 }
 
@@ -340,6 +355,15 @@ xpc_lite_string_create(const char *string)
 	val.str = __DECONST(char *, string);
 	return _xpc_lite_prim_create(_XPC_TYPE_STRING, val, strlen(string));
 }
+
+//xpc_lite_object_t
+//xpc_lite_error_create(const struct _xpc_lite_dictionary_s *event)
+//{
+//    xpc_lite_u val = {0};
+//
+//    val.ptr = (uintptr_t)event;
+//    return _xpc_lite_prim_create(_XPC_TYPE_ERROR, val, 1);
+//}
 
 xpc_lite_object_t
 xpc_lite_string_create_with_format(const char *fmt, ...)

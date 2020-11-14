@@ -34,7 +34,7 @@ xpc_lite_array_create(const xpc_lite_object_t *objects, size_t count)
 {
 	struct xpc_lite_object *xo;
 	size_t i;
-	xpc_lite_u val;
+    xpc_lite_u val = {0};
 
 	xo = _xpc_lite_prim_create(_XPC_TYPE_ARRAY, val, 0);
 	

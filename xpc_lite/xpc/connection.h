@@ -53,7 +53,7 @@ const struct _xpc_lite_dictionary_s _xpc_lite_error_connection_interrupted;
 	XPC_GLOBAL_OBJECT(_xpc_lite_error_connection_invalid)
 __OSX_AVAILABLE_STARTING(__MAC_10_7, __IPHONE_5_0)
 XPC_EXPORT
-const struct _xpc_lite_dictionary_s _xpc_lite_error_connection_invalid;
+const struct xpc_lite_object _xpc_lite_error_connection_invalid;
 
 /*!
  * @constant XPC_ERROR_TERMINATION_IMMINENT
@@ -189,6 +189,8 @@ XPC_EXPORT XPC_MALLOC XPC_RETURNS_RETAINED XPC_WARN_RESULT XPC_NONNULL1
 xpc_lite_connection_t
 xpc_lite_connection_create_mach_service(const char *name, dispatch_queue_t targetq,
 	uint64_t flags);
+xpc_lite_connection_t
+xpc_lite_connection_create_tcp_service(const char *ip, uint16_t port, dispatch_queue_t targetq, uint64_t flags);
 
 /*!
  * @function xpc_lite_connection_create_from_endpoint

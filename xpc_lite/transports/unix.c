@@ -33,6 +33,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/stat.h>
 #include <stdbool.h>
 #include <pthread.h>
@@ -41,10 +43,12 @@
 
 #include "../xpc_lite_internal.h"
 
-#define SOCKET_DIR "/var/run/xpc"
+//#define SOCKET_DIR "/var/run/xpc"
 
-static int unix_lookup(const char *name, xpc_lite_port_t *local, xpc_lite_port_t *remote);
-static int unix_listen(const char *name, xpc_lite_port_t *port);
+static int unix_lookup(const char *path, xpc_lite_port_t *local, xpc_lite_port_t *remote);
+static int unix_listen(const char *path, xpc_lite_port_t *port);
+static int unix_tcp_listen(const char *ip, uint16_t port, xpc_lite_port_t *fd);
+static int unix_tcp_lookup(const char *ip, uint16_t port, xpc_lite_port_t *fd, xpc_lite_port_t *unused __unused);
 static int unix_release(xpc_lite_port_t port);
 //static char *unix_port_to_string(xpc_lite_port_t port);
 static int unix_port_compare(xpc_lite_port_t p1, xpc_lite_port_t p2);
@@ -52,21 +56,71 @@ static dispatch_source_t unix_create_client_source(xpc_lite_port_t port, void *,
     dispatch_queue_t tq);
 static dispatch_source_t unix_create_server_source(xpc_lite_port_t port, void *,
     dispatch_queue_t tq);
-static int unix_send(xpc_lite_port_t local, xpc_lite_port_t remote, void *buf,
+static size_t unix_send(xpc_lite_port_t local, xpc_lite_port_t remote, void *buf,
     size_t len, struct xpc_lite_resource *res, size_t nres);
-static int unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf,
+static size_t unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf,
     size_t len, struct xpc_lite_resource **res, size_t *nres,
     struct xpc_lite_credentials *creds);
 
 static int
-unix_lookup(const char *name, xpc_lite_port_t *port, xpc_lite_port_t *unused __unused)
+unix_tcp_lookup(const char *ip, uint16_t port, xpc_lite_port_t *fd, xpc_lite_port_t *unused __unused)
+{
+    int ret;
+    struct sockaddr_in addr;
+    addr.sin_len = sizeof(addr);
+    addr.sin_family = AF_INET;
+    inet_aton(ip, &addr.sin_addr);
+    addr.sin_port = htons(port);
+    
+    ret = socket(AF_INET, SOCK_STREAM, 0);
+    
+    if (connect(ret, (struct sockaddr *)&addr,sizeof(addr)) != 0) {
+        debugf("connect failed: %s", strerror(errno));
+        return (-1);
+    }
+
+    *fd = (xpc_lite_port_t)(long)ret;
+    return (0);
+}
+
+static int
+unix_tcp_listen(const char *ip, uint16_t port, xpc_lite_port_t *fd)
+{
+    int ret;
+    struct sockaddr_in addr;
+    addr.sin_len = sizeof(addr);
+    addr.sin_family = AF_INET;
+    inet_aton(ip, &addr.sin_addr);
+    addr.sin_port = htons(port);
+
+    ret = socket(AF_INET, SOCK_STREAM, 0);
+    if (ret == -1){
+        debugf("create socket failed: %s", strerror(errno));
+        return (-1);
+    }
+
+//    int one = 1;
+//    setsockopt(ret, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+    
+    if (bind(ret, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
+        debugf("bind failed: %s", strerror(errno));
+        return (-1);
+    }
+
+    if (listen(ret, 5) != 0) {
+        debugf("listen failed: %s", strerror(errno));
+        return (-1);
+    }
+
+    *fd = (xpc_lite_port_t)(long)ret;
+    return (0);
+}
+
+static int
+unix_lookup(const char *path, xpc_lite_port_t *port, xpc_lite_port_t *unused __unused)
 {
 	struct sockaddr_un addr;
 	int ret;
-	char *path;
-
-//	asprintf(&path, "%s/%s", SOCKET_DIR, name);
-    asprintf(&path, "%s", name);
     
 	ret = socket(AF_UNIX, SOCK_STREAM, 0);
 	addr.sun_family = AF_UNIX;
@@ -74,7 +128,6 @@ unix_lookup(const char *name, xpc_lite_port_t *port, xpc_lite_port_t *unused __u
     size_t max_path_len = sizeof(addr.sun_path);
 	strncpy(addr.sun_path, path, max_path_len);
     addr.sun_path[max_path_len - 1] = '\0';
-    free(path);
     
 	if (connect(ret, (struct sockaddr *)&addr,
 	    addr.sun_len) != 0) {
@@ -87,20 +140,21 @@ unix_lookup(const char *name, xpc_lite_port_t *port, xpc_lite_port_t *unused __u
 }
 
 static int
-unix_listen(const char *name, xpc_lite_port_t *port)
+unix_listen(const char *path, xpc_lite_port_t *port)
 {
 	struct sockaddr_un addr;
-	char *path;
+//    char *path;
 	int ret;
     
-//	asprintf(&path, "%s/%s", SOCKET_DIR, name);
-    asprintf(&path, "%s", name);
+//    asprintf(&path, "%s/%s", SOCKET_DIR, name);
+    
 	addr.sun_family = AF_UNIX;
 	addr.sun_len = sizeof(struct sockaddr_un);
     size_t max_path_len = sizeof(addr.sun_path);
 	strncpy(addr.sun_path, path, max_path_len);
     addr.sun_path[max_path_len - 1] = '\0';
-    free(path);
+    
+//    free(path);
     
     unlink(addr.sun_path);
 
@@ -189,7 +243,7 @@ unix_create_server_source(xpc_lite_port_t port, void *context, dispatch_queue_t 
 
 	ret = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ,
 	    (uintptr_t)fd, 0, tq);
-//    dispatch_set_context(ret, context);
+    dispatch_set_context(ret, context);
 	dispatch_source_set_event_handler(ret, ^{
 	    	int sock;
 	    	xpc_lite_port_t client_port;
@@ -198,12 +252,12 @@ unix_create_server_source(xpc_lite_port_t port, void *context, dispatch_queue_t 
 	    	sock = accept(fd, NULL, NULL);
 	    	client_port = (xpc_lite_port_t)(long)sock;
 	    	client_source = unix_create_client_source(client_port, NULL, tq);
-	    	xpc_lite_connection_new_peer(context, client_port, -1, client_source);
+	    	xpc_lite_connection_new_peer(context, client_port, NULL, client_source);
 	});
 	return (ret);
 }
 
-static int
+static size_t
 unix_send(xpc_lite_port_t local, xpc_lite_port_t remote __unused, void *buf, size_t len,
     struct xpc_lite_resource *res, size_t nres)
 {
@@ -281,13 +335,13 @@ unix_send(xpc_lite_port_t local, xpc_lite_port_t remote __unused, void *buf, siz
 	return (0);
 }
 
-static int
+static size_t
 unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf, size_t len,
     struct xpc_lite_resource **res, size_t *nres, struct xpc_lite_credentials *creds)
 {
 	int fd = (int)local;
 	struct msghdr msg;
-    struct cmsghdr *cmsg;
+//    struct cmsghdr *cmsg;
     
 //#ifndef __APPLE__
 //    struct cmsgcred *recv_creds = NULL;
@@ -295,8 +349,8 @@ unix_recv(xpc_lite_port_t local, xpc_lite_port_t *remote, void *buf, size_t len,
     
     memset(&msg, 0, sizeof(struct msghdr));
     struct iovec iov = { .iov_base = buf, .iov_len = len };
-    int *recv_fds = NULL;
-    size_t recv_fds_count = 0;
+//    int *recv_fds = NULL;
+//    size_t recv_fds_count = 0;
     ssize_t recvd;
 
     msg.msg_name = NULL;
@@ -365,6 +419,8 @@ struct xpc_lite_transport unix_transport = {
     	.xt_name = "unix",
 	.xt_listen = unix_listen,
 	.xt_lookup = unix_lookup,
+    .xt_tcp_listen = unix_tcp_listen,
+    .xt_tcp_lookup = unix_tcp_lookup,
 	.xt_release = unix_release,
 //    	.xt_port_to_string = unix_port_to_string,
     	.xt_port_compare = unix_port_compare,
