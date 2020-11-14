@@ -206,9 +206,6 @@ ipc_object_t ipc_uuid_create(const uuid_t uuid);
 
 const uint8_t * ipc_uuid_get_bytes(ipc_object_t xuuid);
 
-void ipc_main(ipc_connection_handler_t handler);
-
-
 __END_DECLS
 
 #endif // __XPC_BASE_H__ 

@@ -287,13 +287,6 @@ ipc_connection_get_context(ipc_connection_t xconn)
 	return (conn->xc_context);
 }
 
-void
-ipc_main(ipc_connection_handler_t handler)
-{
-
-	dispatch_main();
-}
-
 static void
 ipc_send(ipc_connection_t xconn, ipc_object_t message, uint64_t id)
 {
