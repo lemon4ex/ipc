@@ -198,10 +198,12 @@ void
 ipc_connection_send_message(ipc_connection_t xconn, ipc_object_t message)
 {
     struct ipc_connection *conn;
-    uint64_t id;
+    uint64_t id = 0;
     
     conn = (struct ipc_connection *)xconn;
-    id = ipc_dictionary_get_uint64(message, IPC_SEQID);
+    if (ipc_get_type(message) == IPC_TYPE_DICTIONARY) {
+        id = ipc_dictionary_get_uint64(message, IPC_SEQID);
+    }
     
     if (id == 0){
         id = (uint64_t)IPC_CONNECTION_NEXT_ID(conn);
