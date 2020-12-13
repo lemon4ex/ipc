@@ -48,8 +48,8 @@
 #define _IPC_TYPE_DICTIONARY		1
 #define _IPC_TYPE_ARRAY			2
 #define _IPC_TYPE_BOOL			3
-#define _IPC_TYPE_CONNECTION		4
-#define _IPC_TYPE_ENDPOINT		5
+//#define _IPC_TYPE_CONNECTION		4
+//#define _IPC_TYPE_ENDPOINT		5
 #define	_IPC_TYPE_NULL			6
 #define _IPC_TYPE_INT64			8
 #define _IPC_TYPE_UINT64		9
@@ -57,8 +57,8 @@
 #define _IPC_TYPE_DATA			11
 #define _IPC_TYPE_STRING		12
 #define _IPC_TYPE_UUID			13
-#define _IPC_TYPE_FD			14
-#define _IPC_TYPE_SHMEM			15
+//#define _IPC_TYPE_FD			14
+//#define _IPC_TYPE_SHMEM			15
 #define _IPC_TYPE_ERROR			16
 #define _IPC_TYPE_DOUBLE		17
 #define _IPC_TYPE_MAX			_IPC_TYPE_DOUBLE

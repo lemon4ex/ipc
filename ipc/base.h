@@ -40,17 +40,17 @@ typedef void * ipc_object_t;
 
 typedef void (^ipc_handler_t)(ipc_object_t object);
 
-#define IPC_TYPE_CONNECTION (&_ipc_type_connection)
+//#define IPC_TYPE_CONNECTION (&_ipc_type_connection)
 
-IPC_EXPORT IPC_TYPE(_ipc_type_connection);
+//IPC_EXPORT IPC_TYPE(_ipc_type_connection);
 IPC_DECL(ipc_connection);
 
 typedef void (*ipc_connection_handler_t)(ipc_connection_t connection);
 
-#define IPC_TYPE_ENDPOINT (&_ipc_type_endpoint)
+//#define IPC_TYPE_ENDPOINT (&_ipc_type_endpoint)
 
-IPC_EXPORT IPC_TYPE(_ipc_type_endpoint);
-IPC_DECL(ipc_endpoint);
+//IPC_EXPORT IPC_TYPE(_ipc_type_endpoint);
+//IPC_DECL(ipc_endpoint);
 
 #define IPC_TYPE_NULL (&_ipc_type_null)
 IPC_EXPORT IPC_TYPE(_ipc_type_null);
@@ -94,16 +94,16 @@ IPC_EXPORT IPC_TYPE(_ipc_type_string);
 
 IPC_EXPORT IPC_TYPE(_ipc_type_uuid);
 
-#define IPC_TYPE_FD (&_ipc_type_fd)
+//#define IPC_TYPE_FD (&_ipc_type_fd)
 
-IPC_EXPORT IPC_TYPE(_ipc_type_fd);
+//IPC_EXPORT IPC_TYPE(_ipc_type_fd);
 
 /*!
  * @define IPC_TYPE_SHMEM
  * A type representing a region of shared memory.
  */
-#define IPC_TYPE_SHMEM (&_ipc_type_shmem)
-IPC_EXPORT IPC_TYPE(_ipc_type_shmem);
+//#define IPC_TYPE_SHMEM (&_ipc_type_shmem)
+//IPC_EXPORT IPC_TYPE(_ipc_type_shmem);
 
 #define IPC_TYPE_ARRAY (&_ipc_type_array)
 IPC_EXPORT IPC_TYPE(_ipc_type_array);
