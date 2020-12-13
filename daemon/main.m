@@ -16,8 +16,8 @@
 static void daemon_peer_event_handler(ipc_connection_t peer, ipc_object_t event)
 {
 	ipc_type_t type = ipc_get_type(event);
-	if (type == XPC_TYPE_ERROR) {
-		if (event == XPC_ERROR_CONNECTION_INVALID) {
+	if (type == IPC_TYPE_ERROR) {
+		if (event == IPC_ERROR_CONNECTION_INVALID) {
 			// The client process on the other end of the connection has either
 			// crashed or cancelled the connection. After receiving this error,
 			// the connection is in an invalid state, and you do not need to
@@ -25,7 +25,7 @@ static void daemon_peer_event_handler(ipc_connection_t peer, ipc_object_t event)
 			// here.
 		}
 	} else {
-		assert(type == XPC_TYPE_DICTIONARY);
+		assert(type == IPC_TYPE_DICTIONARY);
 		// Handle the message.
         double value1 = ipc_dictionary_get_double(event, "value1");
         double value2 = ipc_dictionary_get_double(event, "value2");
@@ -65,9 +65,9 @@ int main(int argc, const char *argv[])
 //        }
         // SOCKET_DIR"/net.ymlab.dev.daemon"
 #if CONNECTION_TYPE == 0
-        ipc_connection_t service = ipc_connection_create_uds_service(SOCKET_DIR"/net.ymlab.dev.daemon", dispatch_get_main_queue(), XPC_CONNECTION_MACH_SERVICE_LISTENER);
+        ipc_connection_t service = ipc_connection_create_uds_service(SOCKET_DIR"/net.ymlab.dev.daemon", dispatch_get_main_queue(), IPC_CONNECTION_MACH_SERVICE_LISTENER);
 #else
-        ipc_connection_t service = ipc_connection_create_tcp_service("127.0.0.1", 8998 , dispatch_get_main_queue(), XPC_CONNECTION_MACH_SERVICE_LISTENER);
+        ipc_connection_t service = ipc_connection_create_tcp_service("127.0.0.1", 8998 , dispatch_get_main_queue(), IPC_CONNECTION_MACH_SERVICE_LISTENER);
 #endif
         if (!service) {
             NSLog(@"Failed to create service.");
@@ -89,8 +89,8 @@ int main(int argc, const char *argv[])
 #endif
         ipc_connection_set_event_handler(client, ^(ipc_object_t event){
             ipc_type_t type = ipc_get_type(event);
-            if (type == XPC_TYPE_ERROR) {
-                if (event == XPC_ERROR_CONNECTION_INVALID) {
+            if (type == IPC_TYPE_ERROR) {
+                if (event == IPC_ERROR_CONNECTION_INVALID) {
                     // The client process on the other end of the connection has either
                     // crashed or cancelled the connection. After receiving this error,
                     // the connection is in an invalid state, and you do not need to
@@ -99,7 +99,7 @@ int main(int argc, const char *argv[])
                     NSLog(@"connection closed");
                 }
             } else {
-                assert(type == XPC_TYPE_DICTIONARY);
+                assert(type == IPC_TYPE_DICTIONARY);
                 double result = ipc_dictionary_get_double(event, "result");
                 NSLog(@"%f",result);
             }

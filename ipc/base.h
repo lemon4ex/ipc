@@ -1,7 +1,7 @@
 // Copyright (c) 2009-2011 Apple Inc. All rights reserved.
 
-#ifndef __XPC_BASE_H__
-#define __XPC_BASE_H__
+#ifndef __IPC_BASE_H__
+#define __IPC_BASE_H__
 
 #include <sys/cdefs.h>
 
@@ -24,9 +24,9 @@
 
 __BEGIN_DECLS
 
-#define XPC_EXPORT extern __attribute__((visibility("default")))
-#define XPC_DECL(name) typedef struct _##name##_s * name##_t
-#define XPC_GLOBAL_OBJECT(object) (&(object))
+#define IPC_EXPORT extern __attribute__((visibility("default")))
+#define IPC_DECL(name) typedef struct _##name##_s * name##_t
+#define IPC_GLOBAL_OBJECT(object) (&(object))
 
 
 /*!
@@ -34,94 +34,94 @@ __BEGIN_DECLS
  * A type that describes XPC object types.
  */
 typedef const struct _ipc_type_s * ipc_type_t;
-#define XPC_TYPE(type) const struct _ipc_type_s type
+#define IPC_TYPE(type) const struct _ipc_type_s type
 
 typedef void * ipc_object_t;
 
 typedef void (^ipc_handler_t)(ipc_object_t object);
 
-#define XPC_TYPE_CONNECTION (&_ipc_type_connection)
+#define IPC_TYPE_CONNECTION (&_ipc_type_connection)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_connection);
-XPC_DECL(ipc_connection);
+IPC_EXPORT IPC_TYPE(_ipc_type_connection);
+IPC_DECL(ipc_connection);
 
 typedef void (*ipc_connection_handler_t)(ipc_connection_t connection);
 
-#define XPC_TYPE_ENDPOINT (&_ipc_type_endpoint)
+#define IPC_TYPE_ENDPOINT (&_ipc_type_endpoint)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_endpoint);
-XPC_DECL(ipc_endpoint);
+IPC_EXPORT IPC_TYPE(_ipc_type_endpoint);
+IPC_DECL(ipc_endpoint);
 
-#define XPC_TYPE_NULL (&_ipc_type_null)
-XPC_EXPORT XPC_TYPE(_ipc_type_null);
+#define IPC_TYPE_NULL (&_ipc_type_null)
+IPC_EXPORT IPC_TYPE(_ipc_type_null);
 
-#define XPC_TYPE_BOOL (&_ipc_type_bool)
-XPC_EXPORT XPC_TYPE(_ipc_type_bool);
+#define IPC_TYPE_BOOL (&_ipc_type_bool)
+IPC_EXPORT IPC_TYPE(_ipc_type_bool);
 
-#define XPC_BOOL_TRUE XPC_GLOBAL_OBJECT(_ipc_bool_true)
+#define IPC_BOOL_TRUE IPC_GLOBAL_OBJECT(_ipc_bool_true)
 
-XPC_EXPORT const struct _ipc_bool_s _ipc_bool_true;
+IPC_EXPORT const struct _ipc_bool_s _ipc_bool_true;
 
-#define XPC_BOOL_FALSE XPC_GLOBAL_OBJECT(_ipc_bool_false)
+#define IPC_BOOL_FALSE IPC_GLOBAL_OBJECT(_ipc_bool_false)
 
-XPC_EXPORT const struct _ipc_bool_s _ipc_bool_false;
+IPC_EXPORT const struct _ipc_bool_s _ipc_bool_false;
 
-#define XPC_TYPE_INT64 (&_ipc_type_int64)
+#define IPC_TYPE_INT64 (&_ipc_type_int64)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_int64);
+IPC_EXPORT IPC_TYPE(_ipc_type_int64);
 
-#define XPC_TYPE_UINT64 (&_ipc_type_uint64)
+#define IPC_TYPE_UINT64 (&_ipc_type_uint64)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_uint64);
+IPC_EXPORT IPC_TYPE(_ipc_type_uint64);
 
-#define XPC_TYPE_DOUBLE (&_ipc_type_double)
+#define IPC_TYPE_DOUBLE (&_ipc_type_double)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_double);
+IPC_EXPORT IPC_TYPE(_ipc_type_double);
 
-#define XPC_TYPE_DATE (&_ipc_type_date)
+#define IPC_TYPE_DATE (&_ipc_type_date)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_date);
+IPC_EXPORT IPC_TYPE(_ipc_type_date);
 
-#define XPC_TYPE_DATA (&_ipc_type_data)
+#define IPC_TYPE_DATA (&_ipc_type_data)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_data);
+IPC_EXPORT IPC_TYPE(_ipc_type_data);
 
-#define XPC_TYPE_STRING (&_ipc_type_string)
+#define IPC_TYPE_STRING (&_ipc_type_string)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_string);
+IPC_EXPORT IPC_TYPE(_ipc_type_string);
 
-#define XPC_TYPE_UUID (&_ipc_type_uuid)
+#define IPC_TYPE_UUID (&_ipc_type_uuid)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_uuid);
+IPC_EXPORT IPC_TYPE(_ipc_type_uuid);
 
-#define XPC_TYPE_FD (&_ipc_type_fd)
+#define IPC_TYPE_FD (&_ipc_type_fd)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_fd);
+IPC_EXPORT IPC_TYPE(_ipc_type_fd);
 
 /*!
- * @define XPC_TYPE_SHMEM
+ * @define IPC_TYPE_SHMEM
  * A type representing a region of shared memory.
  */
-#define XPC_TYPE_SHMEM (&_ipc_type_shmem)
-XPC_EXPORT XPC_TYPE(_ipc_type_shmem);
+#define IPC_TYPE_SHMEM (&_ipc_type_shmem)
+IPC_EXPORT IPC_TYPE(_ipc_type_shmem);
 
-#define XPC_TYPE_ARRAY (&_ipc_type_array)
-XPC_EXPORT XPC_TYPE(_ipc_type_array);
+#define IPC_TYPE_ARRAY (&_ipc_type_array)
+IPC_EXPORT IPC_TYPE(_ipc_type_array);
 
-#define XPC_TYPE_DICTIONARY (&_ipc_type_dictionary)
+#define IPC_TYPE_DICTIONARY (&_ipc_type_dictionary)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_dictionary);
+IPC_EXPORT IPC_TYPE(_ipc_type_dictionary);
 
-#define XPC_TYPE_ERROR (&_ipc_type_error)
+#define IPC_TYPE_ERROR (&_ipc_type_error)
 
-XPC_EXPORT XPC_TYPE(_ipc_type_error);
+IPC_EXPORT IPC_TYPE(_ipc_type_error);
 
 
-//#define XPC_ERROR_KEY_DESCRIPTION _ipc_error_key_description
+//#define IPC_ERROR_KEY_DESCRIPTION _ipc_error_key_description
 //
 //const char *const _ipc_error_key_description;
 
-//#define XPC_EVENT_KEY_NAME _ipc_event_key_name
+//#define IPC_EVENT_KEY_NAME _ipc_event_key_name
 //
 //const char *const _ipc_event_key_name;
 
@@ -208,4 +208,4 @@ const uint8_t * ipc_uuid_get_bytes(ipc_object_t xuuid);
 
 __END_DECLS
 
-#endif // __XPC_BASE_H__ 
+#endif // __IPC_BASE_H__ 

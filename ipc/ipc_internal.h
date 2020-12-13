@@ -25,15 +25,15 @@
  *
  */
 
-#ifndef	_LIBXPC_XPC_INTERNAL_H
-#define	_LIBXPC_XPC_INTERNAL_H
+#ifndef	_LIBIPC_IPC_INTERNAL_H
+#define	_LIBIPC_IPC_INTERNAL_H
 
 #include <sys/queue.h>
 #include <sys/uio.h>
 #include <dispatch/dispatch.h>
 #include "mpack.h"
 
-#ifdef XPC_DEBUG
+#ifdef IPC_DEBUG
 #define debugf(...) 				\
     do { 					\
     	fprintf(stderr, "%s: ", __func__);	\
@@ -44,27 +44,27 @@
 #define debugf(...)
 #endif
 
-#define _XPC_TYPE_INVALID		0
-#define _XPC_TYPE_DICTIONARY		1
-#define _XPC_TYPE_ARRAY			2
-#define _XPC_TYPE_BOOL			3
-#define _XPC_TYPE_CONNECTION		4
-#define _XPC_TYPE_ENDPOINT		5
-#define	_XPC_TYPE_NULL			6
-#define _XPC_TYPE_INT64			8
-#define _XPC_TYPE_UINT64		9
-#define _XPC_TYPE_DATE			10
-#define _XPC_TYPE_DATA			11
-#define _XPC_TYPE_STRING		12
-#define _XPC_TYPE_UUID			13
-#define _XPC_TYPE_FD			14
-#define _XPC_TYPE_SHMEM			15
-#define _XPC_TYPE_ERROR			16
-#define _XPC_TYPE_DOUBLE		17
-#define _XPC_TYPE_MAX			_XPC_TYPE_DOUBLE
+#define _IPC_TYPE_INVALID		0
+#define _IPC_TYPE_DICTIONARY		1
+#define _IPC_TYPE_ARRAY			2
+#define _IPC_TYPE_BOOL			3
+#define _IPC_TYPE_CONNECTION		4
+#define _IPC_TYPE_ENDPOINT		5
+#define	_IPC_TYPE_NULL			6
+#define _IPC_TYPE_INT64			8
+#define _IPC_TYPE_UINT64		9
+#define _IPC_TYPE_DATE			10
+#define _IPC_TYPE_DATA			11
+#define _IPC_TYPE_STRING		12
+#define _IPC_TYPE_UUID			13
+#define _IPC_TYPE_FD			14
+#define _IPC_TYPE_SHMEM			15
+#define _IPC_TYPE_ERROR			16
+#define _IPC_TYPE_DOUBLE		17
+#define _IPC_TYPE_MAX			_IPC_TYPE_DOUBLE
 
-#define	XPC_SEQID		"XPC sequence number"
-#define	XPC_PROTOCOL_VERSION	1
+#define	IPC_SEQID		"XPC sequence number"
+#define	IPC_PROTOCOL_VERSION	1
 
 struct ipc_object;
 struct ipc_dict_pair;
@@ -104,7 +104,7 @@ struct ipc_frame_header {
     uint64_t spare[4];
 };
 
-#define _XPC_FROM_WIRE 0x1
+#define _IPC_FROM_WIRE 0x1
 struct ipc_object {
 	uint8_t			xo_ipc_type;
 	uint16_t		xo_flags;
@@ -148,8 +148,8 @@ struct ipc_connection {
 
 struct ipc_resource {
     	int			xr_type;
-#define XPC_RESOURCE_FD		0x01
-#define XPC_RESOURCE_SHMEM	0x02
+#define IPC_RESOURCE_FD		0x01
+#define IPC_RESOURCE_SHMEM	0x02
     	union {
 	    int 		xr_fd;
 	};
@@ -201,6 +201,6 @@ void ipc_connection_recv_message(void *);
 void *ipc_connection_new_peer(void *context, ipc_port_t local, dispatch_source_t src);
 void ipc_connection_destroy_peer(void *context);
 int ipc_pipe_send(ipc_object_t obj, uint64_t id, ipc_port_t local);
-int ipc_pipe_receive(ipc_port_t local, ipc_object_t *result, uint64_t *id);
+size_t ipc_pipe_receive(ipc_port_t local, ipc_object_t *result, uint64_t *id);
 
-#endif	/* _LIBXPC_XPC_INTERNAL_H */
+#endif	/* _LIBIPC_IPC_INTERNAL_H */

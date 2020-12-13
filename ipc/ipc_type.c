@@ -28,7 +28,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <sys/time.h>
-#include "ipc_base.h"
+#include "base.h"
 #include "ipc_internal.h"
 #include "ipc_array.h"
 #include "ipc_dictionary.h"
@@ -72,7 +72,7 @@ typedef const struct ipc_object xs;
 //xs _ipc_error_connection_interrupted = {};
 xs _ipc_error_connection_invalid = {
     .xo_size = 0,
-    .xo_ipc_type = _XPC_TYPE_ERROR,
+    .xo_ipc_type = _IPC_TYPE_ERROR,
     .xo_flags = 0,
     .xo_u = { 0 },
     .xo_refcnt = 1};
@@ -83,23 +83,23 @@ static size_t ipc_data_hash(const uint8_t *data, size_t length);
 
 static ipc_type_t ipc_typemap[] = {
 	NULL,
-	XPC_TYPE_DICTIONARY,
-	XPC_TYPE_ARRAY,
-	XPC_TYPE_BOOL,
-	XPC_TYPE_CONNECTION,
-	XPC_TYPE_ENDPOINT,
-	XPC_TYPE_NULL,
+	IPC_TYPE_DICTIONARY,
+	IPC_TYPE_ARRAY,
+	IPC_TYPE_BOOL,
+	IPC_TYPE_CONNECTION,
+	IPC_TYPE_ENDPOINT,
+	IPC_TYPE_NULL,
 	NULL,
-	XPC_TYPE_INT64,
-	XPC_TYPE_UINT64,
-	XPC_TYPE_DATE,
-	XPC_TYPE_DATA,
-	XPC_TYPE_STRING,
-	XPC_TYPE_UUID,
-	XPC_TYPE_FD,
-	XPC_TYPE_SHMEM,
-	XPC_TYPE_ERROR,
-	XPC_TYPE_DOUBLE
+	IPC_TYPE_INT64,
+	IPC_TYPE_UINT64,
+	IPC_TYPE_DATE,
+	IPC_TYPE_DATA,
+	IPC_TYPE_STRING,
+	IPC_TYPE_UUID,
+	IPC_TYPE_FD,
+	IPC_TYPE_SHMEM,
+	IPC_TYPE_ERROR,
+	IPC_TYPE_DOUBLE
 };
 
 static const char *ipc_typestr[] = {
@@ -146,10 +146,10 @@ _ipc_prim_create_flags(int type, ipc_u value, size_t size, uint16_t flags)
 	xo->xo_audit_token = NULL;
 #endif
 
-	if (type == _XPC_TYPE_DICTIONARY)
+	if (type == _IPC_TYPE_DICTIONARY)
 		TAILQ_INIT(&xo->xo_dict);
 
-	if (type == _XPC_TYPE_ARRAY)
+	if (type == _IPC_TYPE_ARRAY)
 		TAILQ_INIT(&xo->xo_array);
 
 	return (xo);
@@ -159,7 +159,7 @@ ipc_object_t
 ipc_null_create(void)
 {
     ipc_u val = {0};
-	return _ipc_prim_create(_XPC_TYPE_NULL, val, 0);
+	return _ipc_prim_create(_IPC_TYPE_NULL, val, 0);
 }
 
 ipc_object_t
@@ -168,7 +168,7 @@ ipc_bool_create(bool value)
 	ipc_u val = {0};
 
 	val.b = value;
-	return _ipc_prim_create(_XPC_TYPE_BOOL, val, 1);
+	return _ipc_prim_create(_IPC_TYPE_BOOL, val, 1);
 }
 
 bool
@@ -180,7 +180,7 @@ ipc_bool_get_value(ipc_object_t xbool)
 	if (xo == NULL)
 		return (0);
 
-	if (xo->xo_ipc_type == _XPC_TYPE_BOOL)
+	if (xo->xo_ipc_type == _IPC_TYPE_BOOL)
 		return (xo->xo_bool);
 
 	return (false);
@@ -192,7 +192,7 @@ ipc_int64_create(int64_t value)
 	ipc_u val = {0};
 
 	val.i = value;
-	return _ipc_prim_create(_XPC_TYPE_INT64, val, 1);
+	return _ipc_prim_create(_IPC_TYPE_INT64, val, 1);
 }
 
 int64_t
@@ -204,7 +204,7 @@ ipc_int64_get_value(ipc_object_t xint)
 	if (xo == NULL)
 		return (0);
 
-	if (xo->xo_ipc_type == _XPC_TYPE_INT64)
+	if (xo->xo_ipc_type == _IPC_TYPE_INT64)
 		return (xo->xo_int);
 
 	return (0);	
@@ -216,7 +216,7 @@ ipc_uint64_create(uint64_t value)
 	ipc_u val = {0};
 
 	val.ui = value;
-	return _ipc_prim_create(_XPC_TYPE_UINT64, val, 1);
+	return _ipc_prim_create(_IPC_TYPE_UINT64, val, 1);
 }
 
 uint64_t
@@ -228,7 +228,7 @@ ipc_uint64_get_value(ipc_object_t xuint)
 	if (xo == NULL)
 		return (0);
 
-	if (xo->xo_ipc_type == _XPC_TYPE_UINT64)
+	if (xo->xo_ipc_type == _IPC_TYPE_UINT64)
 		return (xo->xo_uint);
 
 	return (0);
@@ -240,7 +240,7 @@ ipc_double_create(double value)
 	ipc_u val = {0};
 
 	val.d = value;
-	return _ipc_prim_create(_XPC_TYPE_DOUBLE, val, 1);
+	return _ipc_prim_create(_IPC_TYPE_DOUBLE, val, 1);
 }
 
 double
@@ -248,7 +248,7 @@ ipc_double_get_value(ipc_object_t xdouble)
 {
 	struct ipc_object *xo = xdouble;
 
-	if (xo->xo_ipc_type == _XPC_TYPE_DOUBLE)
+	if (xo->xo_ipc_type == _IPC_TYPE_DOUBLE)
 		return (xo->xo_d);
 
 	return (0);	
@@ -260,7 +260,7 @@ ipc_date_create(int64_t interval)
 	ipc_u val = {0};
 
 	val.i = interval;
-	return _ipc_prim_create(_XPC_TYPE_DATE, val, 1);
+	return _ipc_prim_create(_IPC_TYPE_DATE, val, 1);
 }
 
 ipc_object_t
@@ -279,7 +279,7 @@ ipc_date_create_from_current(void)
     }
 
 	
-	return _ipc_prim_create(_XPC_TYPE_DATE, val, 1);
+	return _ipc_prim_create(_IPC_TYPE_DATE, val, 1);
 }
 
 int64_t
@@ -290,7 +290,7 @@ ipc_date_get_value(ipc_object_t xdate)
 	if (xo == NULL)
 		return (0);
 
-	if (xo->xo_ipc_type == _XPC_TYPE_DATE)
+	if (xo->xo_ipc_type == _IPC_TYPE_DATE)
 		return (xo->xo_int);
 
 	return (0);	
@@ -302,7 +302,7 @@ ipc_data_create(const void *bytes, size_t length)
 	ipc_u val = {0};
 
 	val.ptr = (uintptr_t)bytes;
-	return _ipc_prim_create(_XPC_TYPE_DATA, val, length);
+	return _ipc_prim_create(_IPC_TYPE_DATA, val, length);
 }
 
 size_t
@@ -313,7 +313,7 @@ ipc_data_get_length(ipc_object_t xdata)
 	if (xo == NULL)
 		return (0);
 
-	if (xo->xo_ipc_type == _XPC_TYPE_DATA)
+	if (xo->xo_ipc_type == _IPC_TYPE_DATA)
 		return (xo->xo_size);
 
 	return (0);	
@@ -327,7 +327,7 @@ ipc_data_get_bytes_ptr(ipc_object_t xdata)
 	if (xo == NULL)
 		return (NULL);
 
-	if (xo->xo_ipc_type == _XPC_TYPE_DATA)
+	if (xo->xo_ipc_type == _IPC_TYPE_DATA)
 		return ((const void *)xo->xo_ptr);
 
 	return (0);	
@@ -347,7 +347,7 @@ ipc_string_create(const char *string)
 	ipc_u val = {0};
 
 	val.str = __DECONST(char *, string);
-	return _ipc_prim_create(_XPC_TYPE_STRING, val, strlen(string));
+	return _ipc_prim_create(_IPC_TYPE_STRING, val, strlen(string));
 }
 
 //ipc_object_t
@@ -356,7 +356,7 @@ ipc_string_create(const char *string)
 //    ipc_u val = {0};
 //
 //    val.ptr = (uintptr_t)event;
-//    return _ipc_prim_create(_XPC_TYPE_ERROR, val, 1);
+//    return _ipc_prim_create(_IPC_TYPE_ERROR, val, 1);
 //}
 
 ipc_object_t
@@ -368,7 +368,7 @@ ipc_string_create_with_format(const char *fmt, ...)
 	va_start(ap, fmt);
 	vasprintf(&val.str, fmt, ap);
 	va_end(ap);
-	return _ipc_prim_create(_XPC_TYPE_STRING, val, strlen(val.str));
+	return _ipc_prim_create(_IPC_TYPE_STRING, val, strlen(val.str));
 }
 
 ipc_object_t
@@ -377,7 +377,7 @@ ipc_string_create_with_format_and_arguments(const char *fmt, va_list ap)
 	ipc_u val = {0};
 
 	vasprintf(&val.str, fmt, ap);
-	return _ipc_prim_create(_XPC_TYPE_STRING, val, strlen(val.str));
+	return _ipc_prim_create(_IPC_TYPE_STRING, val, strlen(val.str));
 }
 
 size_t
@@ -388,7 +388,7 @@ ipc_string_get_length(ipc_object_t xstring)
 	if (xo == NULL)
 		return (0);
 
-	if (xo->xo_ipc_type == _XPC_TYPE_STRING)
+	if (xo->xo_ipc_type == _IPC_TYPE_STRING)
 		return (xo->xo_size);
 
 	return (0);
@@ -402,7 +402,7 @@ ipc_string_get_string_ptr(ipc_object_t xstring)
 	if (xo == NULL)
 		return (NULL);
 
-	if (xo->xo_ipc_type == _XPC_TYPE_STRING)
+	if (xo->xo_ipc_type == _IPC_TYPE_STRING)
 		return (xo->xo_str);
 
 	return (NULL);
@@ -414,7 +414,7 @@ ipc_uuid_create(const uuid_t uuid)
 	ipc_u val = {0};
 
 	memcpy(val.uuid, uuid, sizeof(uuid_t));
-	return _ipc_prim_create(_XPC_TYPE_UUID, val, 1);
+	return _ipc_prim_create(_IPC_TYPE_UUID, val, 1);
 }
 
 const uint8_t *
@@ -426,7 +426,7 @@ ipc_uuid_get_bytes(ipc_object_t xuuid)
 	if (xo == NULL)
 		return (NULL);
 
-	if (xo->xo_ipc_type == _XPC_TYPE_UUID)
+	if (xo->xo_ipc_type == _IPC_TYPE_UUID)
 		return ((uint8_t*)&xo->xo_uuid);
 
 	return (NULL);
@@ -461,23 +461,23 @@ ipc_copy(ipc_object_t obj)
 
 	xo = obj;
 	switch (xo->xo_ipc_type) {
-		case _XPC_TYPE_BOOL:
-		case _XPC_TYPE_INT64:
-		case _XPC_TYPE_UINT64:
-		case _XPC_TYPE_DATE:
-		case _XPC_TYPE_ENDPOINT:
+		case _IPC_TYPE_BOOL:
+		case _IPC_TYPE_INT64:
+		case _IPC_TYPE_UINT64:
+		case _IPC_TYPE_DATE:
+		case _IPC_TYPE_ENDPOINT:
 			return _ipc_prim_create(xo->xo_ipc_type, xo->xo_u, 1);
 
-		case _XPC_TYPE_STRING:
+		case _IPC_TYPE_STRING:
 			return ipc_string_create(strdup(
 			    ipc_string_get_string_ptr(xo)));
 
-		case _XPC_TYPE_DATA:
+		case _IPC_TYPE_DATA:
 			newdata = ipc_data_get_bytes_ptr(obj);
 			return (ipc_data_create(newdata,
 			    ipc_data_get_length(obj)));
 
-		case _XPC_TYPE_DICTIONARY:
+		case _IPC_TYPE_DICTIONARY:
 			xotmp = ipc_dictionary_create(NULL, NULL, 0);
 			ipc_dictionary_apply(obj, ^(const char *k, ipc_object_t v) {
 			    ipc_dictionary_set_value(xotmp, strdup(k), ipc_copy(v));
@@ -485,7 +485,7 @@ ipc_copy(ipc_object_t obj)
 			});
 			return (xotmp);
 
-		case _XPC_TYPE_ARRAY:
+		case _IPC_TYPE_ARRAY:
 			xotmp = ipc_array_create(NULL, 0);
 			ipc_array_apply(obj, ^(size_t idx, ipc_object_t v) {
 			    ipc_array_set_value(xotmp, idx, ipc_copy(v));
@@ -516,24 +516,24 @@ ipc_hash(ipc_object_t obj)
 
 	xo = obj;
 	switch (xo->xo_ipc_type) {
-	case _XPC_TYPE_BOOL:
-	case _XPC_TYPE_INT64:
-	case _XPC_TYPE_UINT64:
-	case _XPC_TYPE_DATE:
-	case _XPC_TYPE_ENDPOINT:
+	case _IPC_TYPE_BOOL:
+	case _IPC_TYPE_INT64:
+	case _IPC_TYPE_UINT64:
+	case _IPC_TYPE_DATE:
+	case _IPC_TYPE_ENDPOINT:
 		return ((size_t)xo->xo_u.ui);
 
-	case _XPC_TYPE_STRING:
+	case _IPC_TYPE_STRING:
 		return (ipc_data_hash(
 		    (const uint8_t *)ipc_string_get_string_ptr(obj),
 		    ipc_string_get_length(obj)));
 
-	case _XPC_TYPE_DATA:
+	case _IPC_TYPE_DATA:
 		return (ipc_data_hash(
 		    ipc_data_get_bytes_ptr(obj),
 		    ipc_data_get_length(obj)));
 
-	case _XPC_TYPE_DICTIONARY:
+	case _IPC_TYPE_DICTIONARY:
 		ipc_dictionary_apply(obj, ^(const char *k, ipc_object_t v) {
 			hash ^= ipc_data_hash((const uint8_t *)k, strlen(k));
 			hash ^= ipc_hash(v);
@@ -541,7 +541,7 @@ ipc_hash(ipc_object_t obj)
 		});
 		return (hash);
 
-	case _XPC_TYPE_ARRAY:
+	case _IPC_TYPE_ARRAY:
 		ipc_array_apply(obj, ^(size_t idx, ipc_object_t v) {
 			hash ^= ipc_hash(v);
 			return ((bool)true);

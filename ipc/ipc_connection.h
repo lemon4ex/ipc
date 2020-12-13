@@ -9,23 +9,23 @@
 #ifndef ipc_connection_h
 #define ipc_connection_h
 
-#include "ipc_base.h"
+#include <ipc/base.h>
 
 __BEGIN_DECLS
 
-#define XPC_ERROR_CONNECTION_INTERRUPTED \
-    XPC_GLOBAL_OBJECT(_ipc_error_connection_interrupted)
-XPC_EXPORT const struct _ipc_dictionary_s _ipc_error_connection_interrupted;
+#define IPC_ERROR_CONNECTION_INTERRUPTED \
+    IPC_GLOBAL_OBJECT(_ipc_error_connection_interrupted)
+IPC_EXPORT const struct _ipc_dictionary_s _ipc_error_connection_interrupted;
 
-#define XPC_ERROR_CONNECTION_INVALID \
-    XPC_GLOBAL_OBJECT(_ipc_error_connection_invalid)
-XPC_EXPORT const struct ipc_object _ipc_error_connection_invalid;
+#define IPC_ERROR_CONNECTION_INVALID \
+    IPC_GLOBAL_OBJECT(_ipc_error_connection_invalid)
+IPC_EXPORT const struct ipc_object _ipc_error_connection_invalid;
 
-#define XPC_ERROR_TERMINATION_IMMINENT \
-    XPC_GLOBAL_OBJECT(_ipc_error_termination_imminent)
-XPC_EXPORT const struct _ipc_dictionary_s _ipc_error_termination_imminent;
+#define IPC_ERROR_TERMINATION_IMMINENT \
+    IPC_GLOBAL_OBJECT(_ipc_error_termination_imminent)
+IPC_EXPORT const struct _ipc_dictionary_s _ipc_error_termination_imminent;
 
-#define XPC_CONNECTION_MACH_SERVICE_LISTENER (1 << 0)
+#define IPC_CONNECTION_MACH_SERVICE_LISTENER (1 << 0)
 
 typedef void (*ipc_finalizer_t)(void *value);
 

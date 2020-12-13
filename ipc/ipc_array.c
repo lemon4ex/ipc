@@ -36,7 +36,7 @@ ipc_array_create(const ipc_object_t *objects, size_t count)
 	size_t i;
     ipc_u val = {0};
 
-	xo = _ipc_prim_create(_XPC_TYPE_ARRAY, val, 0);
+	xo = _ipc_prim_create(_IPC_TYPE_ARRAY, val, 0);
 	
 	for (i = 0; i < count; i++)
 		ipc_array_append_value(xo, objects[i]);
@@ -55,7 +55,7 @@ ipc_array_set_value(ipc_object_t xarray, size_t index, ipc_object_t value)
 	arr = &xo->xo_array;
 	i = 0;
 
-	if (index == XPC_ARRAY_APPEND)
+	if (index == IPC_ARRAY_APPEND)
 		return ipc_array_append_value(xarray, value);
 
 	if (index >= (size_t)xo->xo_size)

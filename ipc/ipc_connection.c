@@ -28,13 +28,13 @@
 #include <errno.h>
 #ifdef __APPLE__
 #include <libkern/OSAtomic.h>
-#define XPC_CONNECTION_NEXT_ID(conn) (OSAtomicAdd64(1,(OSAtomic_int64_aligned64_t *)&conn->xc_last_id))
+#define IPC_CONNECTION_NEXT_ID(conn) (OSAtomicAdd64(1,(OSAtomic_int64_aligned64_t *)&conn->xc_last_id))
 #else
 #include <machine/atomic.h>
-#define XPC_CONNECTION_NEXT_ID(conn) (atomic_fetchadd_int(&conn->xc_last_id,1))
+#define IPC_CONNECTION_NEXT_ID(conn) (atomic_fetchadd_int(&conn->xc_last_id,1))
 #endif
 #include <Block.h>
-#include "ipc_base.h"
+#include "base.h"
 #include "ipc_internal.h"
 #include "ipc_connection.h"
 #include "ipc_array.h"
@@ -91,7 +91,7 @@ ipc_connection_create_uds_service(const char *path, dispatch_queue_t targetq, ui
     
 	conn->xc_flags = flags;
 
-	if (flags & XPC_CONNECTION_MACH_SERVICE_LISTENER) {
+	if (flags & IPC_CONNECTION_MACH_SERVICE_LISTENER) {
 		if (transport->xt_listen(path, &conn->xc_local_port) != 0) {
 			debugf("Cannot create local port: %s", strerror(errno));
 			return (NULL);
@@ -121,7 +121,7 @@ ipc_connection_create_tcp_service(const char *ip, uint16_t port, dispatch_queue_
     
     conn->xc_flags = flags;
 
-    if (flags & XPC_CONNECTION_MACH_SERVICE_LISTENER) {
+    if (flags & IPC_CONNECTION_MACH_SERVICE_LISTENER) {
         if (transport->xt_tcp_listen(ip, port, &conn->xc_local_port) != 0) {
             debugf("Cannot create local port: %s", strerror(errno));
             return (NULL);
@@ -178,7 +178,7 @@ ipc_connection_resume(ipc_connection_t xconn)
 	conn = (struct ipc_connection *)xconn;
 
 	/* Create dispatch source for top-level connection */
-	if (conn->xc_flags & XPC_CONNECTION_MACH_SERVICE_LISTENER) {
+	if (conn->xc_flags & IPC_CONNECTION_MACH_SERVICE_LISTENER) {
 		conn->xc_recv_source = transport->xt_create_server_source(
 		    conn->xc_local_port, conn, conn->xc_recv_queue);
             dispatch_resume(conn->xc_recv_source);
@@ -200,10 +200,10 @@ ipc_connection_send_message(ipc_connection_t xconn, ipc_object_t message)
 	uint64_t id;
 
 	conn = (struct ipc_connection *)xconn;
-	id = ipc_dictionary_get_uint64(message, XPC_SEQID);
+	id = ipc_dictionary_get_uint64(message, IPC_SEQID);
 
     if (id == 0){
-        id = (uint64_t)XPC_CONNECTION_NEXT_ID(conn);
+        id = (uint64_t)IPC_CONNECTION_NEXT_ID(conn);
     }
 
     ipc_retain(message);
@@ -222,7 +222,7 @@ ipc_connection_send_message_with_reply(ipc_connection_t xconn, ipc_object_t mess
 
 	conn = (struct ipc_connection *)xconn;
 	call = malloc(sizeof(struct ipc_pending_call));
-	call->xp_id = (uint64_t)XPC_CONNECTION_NEXT_ID(conn);
+	call->xp_id = (uint64_t)IPC_CONNECTION_NEXT_ID(conn);
 	call->xp_handler = handler;
     call->xp_queue = targetq?:conn->xc_target_queue;
 	TAILQ_INSERT_TAIL(&conn->xc_pending, call, xp_link);
@@ -241,8 +241,7 @@ ipc_connection_send_message_with_reply_sync(ipc_connection_t conn, ipc_object_t 
 	__block ipc_object_t result;
 	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 
-	ipc_connection_send_message_with_reply(conn, message, NULL,
-	    ^(ipc_object_t o) {
+	ipc_connection_send_message_with_reply(conn, message, NULL, ^(ipc_object_t o) {
 		result = o;
 		dispatch_semaphore_signal(sem);
 	});
@@ -293,8 +292,10 @@ ipc_send(ipc_connection_t xconn, ipc_object_t message, uint64_t id)
 	struct ipc_connection *conn;
     debugf("connection=%p, message=%p, id=%llu", xconn, message, id);
 	conn = (struct ipc_connection *)xconn;
-	if (ipc_pipe_send(message, id, conn->xc_local_port) != 0)
-		debugf("send failed: %s", strerror(errno));
+    if (ipc_pipe_send(message, id, conn->xc_local_port) != 0){
+        debugf("send failed: %s", strerror(errno));
+        ipc_connection_dispatch_callback(conn,(ipc_object_t)IPC_ERROR_CONNECTION_INVALID,id);
+    }
 }
 
 struct ipc_connection *
@@ -348,13 +349,13 @@ ipc_connection_destroy_peer(void *context)
 
 	if (conn->xc_parent != NULL) {
 		dispatch_async(parent->xc_target_queue, ^{
-		    conn->xc_handler((ipc_object_t)XPC_ERROR_CONNECTION_INVALID);
+		    conn->xc_handler((ipc_object_t)IPC_ERROR_CONNECTION_INVALID);
 		});
 
 		TAILQ_REMOVE(&parent->xc_peers, conn, xc_link);
     }else{
         dispatch_async(conn->xc_target_queue, ^{
-            conn->xc_handler((ipc_object_t)XPC_ERROR_CONNECTION_INVALID);
+            conn->xc_handler((ipc_object_t)IPC_ERROR_CONNECTION_INVALID);
         });
     }
 
@@ -397,7 +398,7 @@ ipc_connection_recv_message(void *context)
 	struct ipc_connection *conn;
 	ipc_object_t result;
 	uint64_t id;
-	int err;
+	size_t err;
 
 	debugf("connection=%p", context);
 

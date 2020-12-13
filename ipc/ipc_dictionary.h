@@ -9,7 +9,7 @@
 #ifndef ipc_dictionary_h
 #define ipc_dictionary_h
 
-#include "ipc_base.h"
+#include <ipc/base.h>
 
 __BEGIN_DECLS
 

@@ -36,7 +36,7 @@
 #include <assert.h>
 #include <syslog.h>
 #include <pthread.h>
-#include "ipc_base.h"
+#include "base.h"
 #include "ipc_internal.h"
 
 #define RECV_BUFFER_SIZE	65536
@@ -103,7 +103,7 @@ ipc_pack(struct ipc_object *xo, void **buf, uint64_t id, size_t *size)
 	header = (struct ipc_frame_header *)ret;
 	header->length = packed_size;
 	header->id = id;
-	header->version = XPC_PROTOCOL_VERSION;
+	header->version = IPC_PROTOCOL_VERSION;
 
 	memcpy(ret + sizeof(*header), packed, packed_size);
 	*buf = ret;
@@ -133,10 +133,10 @@ ipc_unpack(void *buf, size_t size)
 void
 ipc_object_destroy(struct ipc_object *xo)
 {
-	if (xo->xo_ipc_type == _XPC_TYPE_DICTIONARY)
+	if (xo->xo_ipc_type == _IPC_TYPE_DICTIONARY)
 		ipc_dictionary_destroy(xo);
 
-	if (xo->xo_ipc_type == _XPC_TYPE_ARRAY)
+	if (xo->xo_ipc_type == _IPC_TYPE_ARRAY)
 		ipc_array_destroy(xo);
 
 	free(xo);
@@ -208,7 +208,7 @@ ipc_copy_description(ipc_object_t obj)
 //	sbuf_printf(sbuf, "(%s) ", _ipc_get_type_name(obj));
 //
 //	switch (xo->xo_ipc_type) {
-//	case _XPC_TYPE_DICTIONARY:
+//	case _IPC_TYPE_DICTIONARY:
 //		sbuf_printf(sbuf, "\n");
 //		ipc_dictionary_apply(xo, ^(const char *k, ipc_object_t v) {
 //			sbuf_printf(sbuf, "%*s\"%s\": ", level * 4, " ", k);
@@ -217,7 +217,7 @@ ipc_copy_description(ipc_object_t obj)
 //		});
 //		break;
 //
-//	case _XPC_TYPE_ARRAY:
+//	case _IPC_TYPE_ARRAY:
 //		sbuf_printf(sbuf, "\n");
 //		ipc_array_apply(xo, ^(size_t idx, ipc_object_t v) {
 //			sbuf_printf(sbuf, "%*s%ld: ", level * 4, " ", idx);
@@ -226,43 +226,43 @@ ipc_copy_description(ipc_object_t obj)
 //		});
 //		break;
 //
-//	case _XPC_TYPE_BOOL:
+//	case _IPC_TYPE_BOOL:
 //		sbuf_printf(sbuf, "%s\n",
 //		    ipc_bool_get_value(obj) ? "true" : "false");
 //		break;
 //
-//	case _XPC_TYPE_STRING:
+//	case _IPC_TYPE_STRING:
 //		sbuf_printf(sbuf, "\"%s\"\n",
 //		    ipc_string_get_string_ptr(obj));
 //		break;
 //
-//	case _XPC_TYPE_INT64:
+//	case _IPC_TYPE_INT64:
 //		sbuf_printf(sbuf, "%ld\n",
 //		    ipc_int64_get_value(obj));
 //		break;
 //
-//	case _XPC_TYPE_UINT64:
+//	case _IPC_TYPE_UINT64:
 //		sbuf_printf(sbuf, "%lx\n",
 //		    ipc_uint64_get_value(obj));
 //		break;
 //
-//	case _XPC_TYPE_DATE:
+//	case _IPC_TYPE_DATE:
 //		sbuf_printf(sbuf, "%lu\n",
 //		    ipc_date_get_value(obj));
 //		break;
 //
-//	case _XPC_TYPE_UUID:
+//	case _IPC_TYPE_UUID:
 //		id = (struct uuid *)ipc_uuid_get_bytes(obj);
 //		uuid_to_string(id, &uuid_str, &uuid_status);
 //		sbuf_printf(sbuf, "%s\n", uuid_str);
 //		free(uuid_str);
 //		break;
 //
-//	case _XPC_TYPE_ENDPOINT:
+//	case _IPC_TYPE_ENDPOINT:
 //		sbuf_printf(sbuf, "<%ld>\n", xo->xo_int);
 //		break;
 //
-//	case _XPC_TYPE_NULL:
+//	case _IPC_TYPE_NULL:
 //		sbuf_printf(sbuf, "<null>\n");
 //		break;
 //	}
@@ -292,15 +292,15 @@ ipc_pipe_send(ipc_object_t xobj, uint64_t id, ipc_port_t local)
 	return (0);
 }
 
-int
+size_t
 ipc_pipe_receive(ipc_port_t local, ipc_object_t *result, uint64_t *id)
 {
 	struct ipc_transport *transport = ipc_get_transport();
-	struct ipc_resource *resources;
+//	struct ipc_resource *resources;
 	struct ipc_frame_header *header;
 	void *buffer;
-	size_t nresources;
-	int ret;
+//	size_t nresources;
+	size_t ret;
 
 	buffer = malloc(RECV_BUFFER_SIZE);
 
@@ -324,7 +324,7 @@ ipc_pipe_receive(ipc_port_t local, ipc_object_t *result, uint64_t *id)
 		return (-1);
 	}
 
-	if (header->version != XPC_PROTOCOL_VERSION) {
+	if (header->version != IPC_PROTOCOL_VERSION) {
 		debugf("invalid protocol version")
         free(buffer);
 		return (-1);

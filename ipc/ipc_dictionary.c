@@ -26,7 +26,7 @@
  */
 
 #include <sys/types.h>
-#include "ipc_base.h"
+#include "base.h"
 #include "ipc_internal.h"
 #include "ipc_dictionary.h"
 #include "ipc_array.h"
@@ -120,7 +120,7 @@ xpc2mpack(mpack_writer_t *writer, ipc_object_t obj)
 	struct ipc_object *xotmp = obj;
 
 	switch (xotmp->xo_ipc_type) {
-	case _XPC_TYPE_DICTIONARY:
+	case _IPC_TYPE_DICTIONARY:
 		mpack_start_map(writer, (uint32_t)ipc_dictionary_get_count(obj));
 		ipc_dictionary_apply(obj, ^(const char *k, ipc_object_t v) {
 		    mpack_write_cstr(writer, k);
@@ -130,7 +130,7 @@ xpc2mpack(mpack_writer_t *writer, ipc_object_t obj)
 		mpack_finish_map(writer);
 		break;
 
-	case _XPC_TYPE_ARRAY:
+	case _IPC_TYPE_ARRAY:
 		mpack_start_array(writer, (uint32_t)ipc_array_get_count(obj));
 		ipc_array_apply(obj, ^(size_t index __unused, ipc_object_t v) {
 		    xpc2mpack(writer, v);
@@ -139,30 +139,30 @@ xpc2mpack(mpack_writer_t *writer, ipc_object_t obj)
 		mpack_finish_map(writer);
 		break;
 
-	case _XPC_TYPE_NULL:
+	case _IPC_TYPE_NULL:
 		mpack_write_nil(writer);
 		break;
 
-	case _XPC_TYPE_BOOL:
+	case _IPC_TYPE_BOOL:
 		mpack_write_bool(writer, ipc_bool_get_value(obj));
 		break;
 
-	case _XPC_TYPE_INT64:
+	case _IPC_TYPE_INT64:
 		mpack_write_i64(writer, ipc_int64_get_value(obj));
 		break;
 
-	case _XPC_TYPE_DOUBLE:
+	case _IPC_TYPE_DOUBLE:
 		mpack_write_double(writer, ipc_double_get_value(obj));
         break;
-	case _XPC_TYPE_UINT64:
+	case _IPC_TYPE_UINT64:
 		mpack_write_u64(writer, ipc_uint64_get_value(obj));
 		break;
 
-	case _XPC_TYPE_STRING:
+	case _IPC_TYPE_STRING:
 		mpack_write_cstr(writer, ipc_string_get_string_ptr(obj));
 		break;
 
-	case _XPC_TYPE_UUID:
+	case _IPC_TYPE_UUID:
 		break;
 	}
 }
@@ -174,7 +174,7 @@ ipc_dictionary_create(const char * const *keys, const ipc_object_t *values, size
 	size_t i;
 	ipc_u val;
 
-	xo = _ipc_prim_create(_XPC_TYPE_DICTIONARY, val, count);
+	xo = _ipc_prim_create(_IPC_TYPE_DICTIONARY, val, count);
 	
     for (i = 0; i < count; i++){
         ipc_dictionary_set_value(xo, strdup(keys[i]), values[i]);
@@ -188,7 +188,7 @@ ipc_dictionary_create_reply(ipc_object_t original)
 	struct ipc_object *xo_orig;
 
 	xo_orig = original;
-	if ((xo_orig->xo_flags & _XPC_FROM_WIRE) == 0)
+	if ((xo_orig->xo_flags & _IPC_FROM_WIRE) == 0)
 		return (NULL);
 
 	return ipc_dictionary_create(NULL, NULL, 0);

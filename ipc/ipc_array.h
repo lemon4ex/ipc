@@ -9,7 +9,7 @@
 #ifndef ipc_array_h
 #define ipc_array_h
 
-#include "ipc_base.h"
+#include <ipc/base.h>
 
 __BEGIN_DECLS
 
@@ -27,7 +27,7 @@ ipc_object_t ipc_array_get_value(ipc_object_t xarray, size_t index);
 
 bool ipc_array_apply(ipc_object_t xarray, ipc_array_applier_t applier);
 
-#define XPC_ARRAY_APPEND ((size_t)(-1))
+#define IPC_ARRAY_APPEND ((size_t)(-1))
 
 void ipc_array_set_bool(ipc_object_t xarray, size_t index, bool value);
 

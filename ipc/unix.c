@@ -39,7 +39,7 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include <dispatch/dispatch.h>
-#include "ipc_base.h"
+#include "base.h"
 #include "ipc_internal.h"
 
 static int unix_lookup(const char *path, ipc_port_t *local);
