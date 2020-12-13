@@ -92,7 +92,7 @@ ipc_connection_create_uds_service(const char *path, dispatch_queue_t targetq, ui
     
 	conn->xc_flags = flags;
 
-	if (flags & IPC_CONNECTION_MACH_SERVICE_LISTENER) {
+	if (flags & IPC_CONNECTION_LISTENER) {
 		if (transport->xt_listen(path, &conn->xc_local_port) != 0) {
 			debugf("Cannot create local port: %s", strerror(errno));
 			return (NULL);
@@ -122,7 +122,7 @@ ipc_connection_create_tcp_service(const char *ip, uint16_t port, dispatch_queue_
     
     conn->xc_flags = flags;
 
-    if (flags & IPC_CONNECTION_MACH_SERVICE_LISTENER) {
+    if (flags & IPC_CONNECTION_LISTENER) {
         if (transport->xt_tcp_listen(ip, port, &conn->xc_local_port) != 0) {
             debugf("Cannot create local port: %s", strerror(errno));
             return (NULL);
@@ -179,7 +179,7 @@ ipc_connection_resume(ipc_connection_t xconn)
 	conn = (struct ipc_connection *)xconn;
 
 	/* Create dispatch source for top-level connection */
-	if (conn->xc_flags & IPC_CONNECTION_MACH_SERVICE_LISTENER) {
+	if (conn->xc_flags & IPC_CONNECTION_LISTENER) {
 		conn->xc_recv_source = transport->xt_create_server_source(
 		    conn->xc_local_port, conn, conn->xc_recv_queue);
             dispatch_resume(conn->xc_recv_source);

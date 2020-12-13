@@ -149,7 +149,7 @@ ipc_retain(ipc_object_t obj)
 
 	xo = obj;
 #ifdef __APPLE__
-    OSAtomicAdd32(1,&xo->xo_refcnt);
+    OSAtomicAdd32(1,(volatile int32_t *)&xo->xo_refcnt);
 #else
     atomic_add_int(&xo->xo_refcnt, 1);
 #endif
@@ -164,7 +164,7 @@ ipc_release(ipc_object_t obj)
 
 	xo = obj;
 #ifdef __APPLE__
-    if (OSAtomicAdd32(-1,&xo->xo_refcnt) > 0) {
+    if (OSAtomicAdd32(-1,(volatile int32_t *)&xo->xo_refcnt) > 0) {
         return;
     }
 #else

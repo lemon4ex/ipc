@@ -25,7 +25,8 @@ IPC_EXPORT const struct ipc_object _ipc_error_connection_invalid;
     IPC_GLOBAL_OBJECT(_ipc_error_termination_imminent)
 IPC_EXPORT const struct _ipc_dictionary_s _ipc_error_termination_imminent;
 
-#define IPC_CONNECTION_MACH_SERVICE_LISTENER (1 << 0)
+#define IPC_CONNECTION_CLIENT (0)
+#define IPC_CONNECTION_LISTENER (1 << 0)
 
 typedef void (*ipc_finalizer_t)(void *value);
 

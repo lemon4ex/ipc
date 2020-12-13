@@ -142,9 +142,6 @@ _ipc_prim_create_flags(int type, ipc_u value, size_t size, uint16_t flags)
 	xo->xo_flags = flags;
 	xo->xo_u = value;
 	xo->xo_refcnt = 1;
-#if MACH
-	xo->xo_audit_token = NULL;
-#endif
 
 	if (type == _IPC_TYPE_DICTIONARY)
 		TAILQ_INIT(&xo->xo_dict);
@@ -155,15 +152,13 @@ _ipc_prim_create_flags(int type, ipc_u value, size_t size, uint16_t flags)
 	return (xo);
 }
 
-ipc_object_t
-ipc_null_create(void)
+ipc_object_t ipc_null_create(void)
 {
     ipc_u val = {0};
 	return _ipc_prim_create(_IPC_TYPE_NULL, val, 0);
 }
 
-ipc_object_t
-ipc_bool_create(bool value)
+ipc_object_t ipc_bool_create(bool value)
 {
 	ipc_u val = {0};
 
@@ -171,8 +166,7 @@ ipc_bool_create(bool value)
 	return _ipc_prim_create(_IPC_TYPE_BOOL, val, 1);
 }
 
-bool
-ipc_bool_get_value(ipc_object_t xbool)
+bool ipc_bool_get_value(ipc_object_t xbool)
 {
 	struct ipc_object *xo;
 
@@ -186,8 +180,7 @@ ipc_bool_get_value(ipc_object_t xbool)
 	return (false);
 }
 
-ipc_object_t
-ipc_int64_create(int64_t value)
+ipc_object_t ipc_int64_create(int64_t value)
 {
 	ipc_u val = {0};
 
@@ -195,8 +188,7 @@ ipc_int64_create(int64_t value)
 	return _ipc_prim_create(_IPC_TYPE_INT64, val, 1);
 }
 
-int64_t
-ipc_int64_get_value(ipc_object_t xint)
+int64_t ipc_int64_get_value(ipc_object_t xint)
 {
 	struct ipc_object *xo;
 
@@ -210,8 +202,7 @@ ipc_int64_get_value(ipc_object_t xint)
 	return (0);	
 }
 
-ipc_object_t
-ipc_uint64_create(uint64_t value)
+ipc_object_t ipc_uint64_create(uint64_t value)
 {
 	ipc_u val = {0};
 
@@ -219,8 +210,7 @@ ipc_uint64_create(uint64_t value)
 	return _ipc_prim_create(_IPC_TYPE_UINT64, val, 1);
 }
 
-uint64_t
-ipc_uint64_get_value(ipc_object_t xuint)
+uint64_t ipc_uint64_get_value(ipc_object_t xuint)
 {
 	struct ipc_object *xo;
 
@@ -234,8 +224,7 @@ ipc_uint64_get_value(ipc_object_t xuint)
 	return (0);
 }
 
-ipc_object_t
-ipc_double_create(double value)
+ipc_object_t ipc_double_create(double value)
 {
 	ipc_u val = {0};
 
@@ -243,8 +232,7 @@ ipc_double_create(double value)
 	return _ipc_prim_create(_IPC_TYPE_DOUBLE, val, 1);
 }
 
-double
-ipc_double_get_value(ipc_object_t xdouble)
+double ipc_double_get_value(ipc_object_t xdouble)
 {
 	struct ipc_object *xo = xdouble;
 
@@ -254,8 +242,7 @@ ipc_double_get_value(ipc_object_t xdouble)
 	return (0);	
 }
 
-ipc_object_t
-ipc_date_create(int64_t interval)
+ipc_object_t ipc_date_create(int64_t interval)
 {
 	ipc_u val = {0};
 
@@ -263,8 +250,7 @@ ipc_date_create(int64_t interval)
 	return _ipc_prim_create(_IPC_TYPE_DATE, val, 1);
 }
 
-ipc_object_t
-ipc_date_create_from_current(void)
+ipc_object_t ipc_date_create_from_current(void)
 {
 	ipc_u val = {0};
 	
@@ -277,13 +263,11 @@ ipc_date_create_from_current(void)
         gettimeofday(&tv,NULL);
         val.ui = (uint64_t)tv.tv_sec * 1000 + (uint64_t)tv.tv_usec / 1000;
     }
-
 	
 	return _ipc_prim_create(_IPC_TYPE_DATE, val, 1);
 }
 
-int64_t
-ipc_date_get_value(ipc_object_t xdate)
+int64_t ipc_date_get_value(ipc_object_t xdate)
 {
 	struct ipc_object *xo = xdate;
 
@@ -296,8 +280,7 @@ ipc_date_get_value(ipc_object_t xdate)
 	return (0);	
 }
 
-ipc_object_t
-ipc_data_create(const void *bytes, size_t length)
+ipc_object_t ipc_data_create(const void *bytes, size_t length)
 {
 	ipc_u val = {0};
 
@@ -305,8 +288,7 @@ ipc_data_create(const void *bytes, size_t length)
 	return _ipc_prim_create(_IPC_TYPE_DATA, val, length);
 }
 
-size_t
-ipc_data_get_length(ipc_object_t xdata)
+size_t ipc_data_get_length(ipc_object_t xdata)
 {
 	struct ipc_object *xo = xdata;
 
@@ -319,8 +301,7 @@ ipc_data_get_length(ipc_object_t xdata)
 	return (0);	
 }
 
-const void *
-ipc_data_get_bytes_ptr(ipc_object_t xdata)
+const void * ipc_data_get_bytes_ptr(ipc_object_t xdata)
 {
 	struct ipc_object *xo = xdata;
 
@@ -333,16 +314,25 @@ ipc_data_get_bytes_ptr(ipc_object_t xdata)
 	return (0);	
 }
 
-size_t
-ipc_data_get_bytes(ipc_object_t xdata, void *buffer, size_t off, size_t length)
+size_t ipc_data_get_bytes(ipc_object_t xdata, void *buffer, size_t off, size_t length)
 {
+    struct ipc_object *xo = xdata;
 
-	/* XXX */
-	return (0);
+    if (xo == NULL){
+        return 0;
+    }
+    if (xo->xo_ipc_type != _IPC_TYPE_DATA){
+        return 0;
+    }
+    if (off > xo->xo_size) {
+        return 0;
+    }
+    size_t copy_len = MIN(length, xo->xo_size - off);
+    memcpy(buffer, xo->xo_u.ptr + off, copy_len);
+    return copy_len;
 }
 
-ipc_object_t
-ipc_string_create(const char *string)
+ipc_object_t ipc_string_create(const char *string)
 {
 	ipc_u val = {0};
 
@@ -359,8 +349,7 @@ ipc_string_create(const char *string)
 //    return _ipc_prim_create(_IPC_TYPE_ERROR, val, 1);
 //}
 
-ipc_object_t
-ipc_string_create_with_format(const char *fmt, ...)
+ipc_object_t ipc_string_create_with_format(const char *fmt, ...)
 {
 	va_list ap;
 	ipc_u val = {0};
@@ -371,8 +360,7 @@ ipc_string_create_with_format(const char *fmt, ...)
 	return _ipc_prim_create(_IPC_TYPE_STRING, val, strlen(val.str));
 }
 
-ipc_object_t
-ipc_string_create_with_format_and_arguments(const char *fmt, va_list ap)
+ipc_object_t ipc_string_create_with_format_and_arguments(const char *fmt, va_list ap)
 {
 	ipc_u val = {0};
 
@@ -380,8 +368,7 @@ ipc_string_create_with_format_and_arguments(const char *fmt, va_list ap)
 	return _ipc_prim_create(_IPC_TYPE_STRING, val, strlen(val.str));
 }
 
-size_t
-ipc_string_get_length(ipc_object_t xstring)
+size_t ipc_string_get_length(ipc_object_t xstring)
 {
 	struct ipc_object *xo = xstring;
 
@@ -394,8 +381,7 @@ ipc_string_get_length(ipc_object_t xstring)
 	return (0);
 }
 
-const char *
-ipc_string_get_string_ptr(ipc_object_t xstring)
+const char * ipc_string_get_string_ptr(ipc_object_t xstring)
 {
 	struct ipc_object *xo = xstring;
 
@@ -408,8 +394,7 @@ ipc_string_get_string_ptr(ipc_object_t xstring)
 	return (NULL);
 }
 
-ipc_object_t
-ipc_uuid_create(const uuid_t uuid)
+ipc_object_t ipc_uuid_create(const uuid_t uuid)
 {
 	ipc_u val = {0};
 
@@ -417,8 +402,7 @@ ipc_uuid_create(const uuid_t uuid)
 	return _ipc_prim_create(_IPC_TYPE_UUID, val, 1);
 }
 
-const uint8_t *
-ipc_uuid_get_bytes(ipc_object_t xuuid)
+const uint8_t * ipc_uuid_get_bytes(ipc_object_t xuuid)
 {
 	struct ipc_object *xo;
 
@@ -432,8 +416,7 @@ ipc_uuid_get_bytes(ipc_object_t xuuid)
 	return (NULL);
 }
 
-ipc_type_t
-ipc_get_type(ipc_object_t obj)
+ipc_type_t ipc_get_type(ipc_object_t obj)
 {
 	struct ipc_object *xo;
 
@@ -441,20 +424,25 @@ ipc_get_type(ipc_object_t obj)
 	return (ipc_typemap[xo->xo_ipc_type]);
 }
 
-bool
-ipc_equal(ipc_object_t x1, ipc_object_t x2)
+bool ipc_equal(ipc_object_t x1, ipc_object_t x2)
 {
 	struct ipc_object *xo1, *xo2;
 
 	xo1 = x1;
 	xo2 = x2;
 
-	/* FIXME */
-	return (false);
+    if (xo1 == xo2) {
+        return true;
+    }
+    
+    if (xo1->xo_ipc_type != xo1->xo_ipc_type) {
+        return false;
+    }
+	
+    return ipc_hash(xo1) == ipc_hash(xo2);
 }
 
-ipc_object_t
-ipc_copy(ipc_object_t obj)
+ipc_object_t ipc_copy(ipc_object_t obj)
 {
 	struct ipc_object *xo, *xotmp;
 	const void *newdata;
@@ -497,8 +485,7 @@ ipc_copy(ipc_object_t obj)
 	return (0);
 }
 
-static size_t
-ipc_data_hash(const uint8_t *data, size_t length)
+static size_t ipc_data_hash(const uint8_t *data, size_t length)
 {
     size_t hash = 5381;
 
@@ -508,8 +495,7 @@ ipc_data_hash(const uint8_t *data, size_t length)
     return (hash);
 }
 
-size_t
-ipc_hash(ipc_object_t obj)
+size_t ipc_hash(ipc_object_t obj)
 {
 	struct ipc_object *xo;
 	__block size_t hash = 0;
