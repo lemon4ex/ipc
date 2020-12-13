@@ -114,7 +114,7 @@ ipc_dictionary_destroy(struct ipc_object *dict)
     TAILQ_FOREACH_SAFE(p, head, xo_link, ptmp) {
         TAILQ_REMOVE(head, p, xo_link);
         free(p->key);
-        ipc_object_destroy(p->value);
+        ipc_release(p->value);
         free(p);
     }
 }
@@ -129,7 +129,7 @@ ipc_array_destroy(struct ipc_object *dict)
     
     TAILQ_FOREACH_SAFE(p, head, xo_link, ptmp) {
         TAILQ_REMOVE(head, p, xo_link);
-        ipc_object_destroy(p);
+        ipc_release(p);
     }
 }
 
@@ -261,7 +261,7 @@ static void ipc_copy_description_level(ipc_object_t obj, struct sbuf *sbuf, int 
     switch (xo->xo_ipc_type) {
         case _IPC_TYPE_DICTIONARY:
             sbuf_printf(sbuf, "\n");
-            ipc_dictionary_apply(xo, ^(const char *k, ipc_object_t v) {
+            ipc_dictionary_apply(xo, ^(char *k, ipc_object_t v) {
                 sbuf_printf(sbuf, "%*s\"%s\": ", level * 4, " ", k);
                 ipc_copy_description_level(v, sbuf, level + 1);
                 return ((bool)true);
@@ -324,8 +324,6 @@ ipc_pipe_send(ipc_object_t xobj, uint64_t id, ipc_port_t local)
     struct ipc_transport *transport = ipc_get_transport();
     void *buf;
     size_t size;
-    
-    assert(ipc_get_type(xobj) == &_ipc_type_dictionary);
     
     if (ipc_pack(xobj, &buf, id, &size) != 0) {
         debugf("pack failed");

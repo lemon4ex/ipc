@@ -29,6 +29,13 @@ static void daemon_peer_event_handler(ipc_connection_t peer, ipc_object_t event)
 		// Handle the message.
         double value1 = ipc_dictionary_get_double(event, "value1");
         double value2 = ipc_dictionary_get_double(event, "value2");
+        const char *value3 = ipc_dictionary_get_string(event, "value3");
+        NSLog(@"value3：%s",value3);
+        size_t len = 0;
+        const char *value4 = ipc_dictionary_get_data(event, "value4", &len);
+        NSData *data = [NSData dataWithBytes:value4 length:len];
+        NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+        NSLog(@"value4：%@",dict);
         ipc_object_t dictionary = ipc_dictionary_create(NULL, NULL, 0);
         ipc_dictionary_set_double(dictionary, "result", value1+value2);
         ipc_connection_send_message(peer, dictionary);
@@ -110,9 +117,13 @@ int main(int argc, const char *argv[])
         timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_main_queue());
         dispatch_source_set_timer(timer, DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC, 0 * NSEC_PER_SEC);
         dispatch_source_set_event_handler(timer, ^{
+            NSDictionary *dict = @{@"k1":@(1),@"key2":@(2)};
             dictionary = ipc_dictionary_create(NULL, NULL, 0);
             ipc_dictionary_set_double(dictionary, "value1", 1.0);
             ipc_dictionary_set_double(dictionary, "value2", 2.0);
+            ipc_dictionary_set_string(dictionary, "value3", "你好");
+            NSData *data = [NSJSONSerialization dataWithJSONObject:dict options:0 error:nil];
+            ipc_dictionary_set_data(dictionary, "value4", data.bytes, data.length);
             ipc_connection_send_message(client, dictionary);
             ipc_release(dictionary);
         });

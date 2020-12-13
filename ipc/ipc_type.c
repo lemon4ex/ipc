@@ -284,7 +284,9 @@ ipc_object_t ipc_data_create(const void *bytes, size_t length)
 {
     ipc_u val = {0};
     
-    val.ptr = (uintptr_t)bytes;
+    void *value = malloc(length);
+    memcpy(value, bytes, length);
+    val.ptr = (uintptr_t)value;
     return _ipc_prim_create(_IPC_TYPE_DATA, val, length);
 }
 
@@ -336,7 +338,7 @@ ipc_object_t ipc_string_create(const char *string)
 {
     ipc_u val = {0};
     
-    val.str = __DECONST(char *, string);
+    val.str = __DECONST(char *, strdup(string));
     return _ipc_prim_create(_IPC_TYPE_STRING, val, strlen(string));
 }
 
@@ -457,8 +459,7 @@ ipc_object_t ipc_copy(ipc_object_t obj)
             return _ipc_prim_create(xo->xo_ipc_type, xo->xo_u, 1);
             
         case _IPC_TYPE_STRING:
-            return ipc_string_create(strdup(
-                                            ipc_string_get_string_ptr(xo)));
+            return ipc_string_create(ipc_string_get_string_ptr(xo));
             
         case _IPC_TYPE_DATA:
             newdata = ipc_data_get_bytes_ptr(obj);
@@ -467,8 +468,8 @@ ipc_object_t ipc_copy(ipc_object_t obj)
             
         case _IPC_TYPE_DICTIONARY:
             xotmp = ipc_dictionary_create(NULL, NULL, 0);
-            ipc_dictionary_apply(obj, ^(const char *k, ipc_object_t v) {
-                ipc_dictionary_set_value(xotmp, strdup(k), ipc_copy(v));
+            ipc_dictionary_apply(obj, ^(char *k, ipc_object_t v) {
+                ipc_dictionary_set_value(xotmp, (char *)k, ipc_copy(v));
                 return (bool)true;
             });
             return (xotmp);
@@ -520,7 +521,7 @@ size_t ipc_hash(ipc_object_t obj)
                                   ipc_data_get_length(obj)));
             
         case _IPC_TYPE_DICTIONARY:
-            ipc_dictionary_apply(obj, ^(const char *k, ipc_object_t v) {
+            ipc_dictionary_apply(obj, ^(char *k, ipc_object_t v) {
                 hash ^= ipc_data_hash((const uint8_t *)k, strlen(k));
                 hash ^= ipc_hash(v);
                 return ((bool)true);
