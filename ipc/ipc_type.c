@@ -327,9 +327,9 @@ size_t ipc_data_get_bytes(ipc_object_t xdata, void *buffer, size_t off, size_t l
     if (off > xo->xo_size) {
         return 0;
     }
-    size_t copy_len = MIN(length, xo->xo_size - off);
-    memcpy(buffer, xo->xo_u.ptr + off, copy_len);
-    return copy_len;
+    size_t len = MIN(length, xo->xo_size - off);
+    memcpy(buffer, ((char *)xo->xo_u.ptr) + off, len);
+    return len;
 }
 
 ipc_object_t ipc_string_create(const char *string)

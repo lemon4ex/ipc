@@ -29,6 +29,7 @@
 #include <sys/errno.h>
 #ifdef __APPLE__
 #include <libkern/OSAtomic.h>
+#include "sbuf.h"
 #else
 #include <sys/sbuf.h>
 #include <machine/atomic.h>
@@ -38,14 +39,63 @@
 #include <pthread.h>
 #include "base.h"
 #include "ipc_internal.h"
+#include "ipc_array.h"
+#include "ipc_dictionary.h"
 
 #define RECV_BUFFER_SIZE	65536
 
-//static void ipc_copy_description_level(ipc_object_t obj, struct sbuf *sbuf,
-//    int level);
+static void ipc_copy_description_level(ipc_object_t obj, struct sbuf *sbuf, int level);
 
 extern struct ipc_transport unix_transport __attribute__((weak));
 extern struct ipc_transport mach_transport __attribute__((weak));
+
+#ifdef __APPLE__
+// https://github.com/AlexShiLucky/nuttx-kernel/blob/ec83dc2ad36c278248b260bade84768352362a15/include/uuid.h
+#define uuid_s_ok                       0
+#define uuid_s_bad_version              1
+#define uuid_s_invalid_string_uuid      2
+#define uuid_s_no_memory                3
+
+/* Length of a node address (an IEEE 802 address). */
+
+#define UUID_NODE_LEN                   6
+
+/* Length of a UUID. */
+
+#define UUID_STR_LEN                    36
+
+struct uuid
+{
+  uint32_t time_low;
+  uint16_t time_mid;
+  uint16_t time_hi_and_version;
+  uint8_t  clock_seq_hi_and_reserved;
+  uint8_t  clock_seq_low;
+  uint8_t  node[UUID_NODE_LEN];
+};
+void uuid_to_string(const struct uuid *u, char **s, uint32_t *status)
+{
+    static const struct uuid nil = { .time_low = 0 };
+
+    if (status != NULL)
+        *status = uuid_s_ok;
+
+    /* Why allow a NULL-pointer here? */
+    if (s == 0)
+        return;
+    
+    if (u == NULL)
+        u = &nil;
+
+    asprintf(s, "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+        u->time_low, u->time_mid, u->time_hi_and_version,
+        u->clock_seq_hi_and_reserved, u->clock_seq_low, u->node[0],
+        u->node[1], u->node[2], u->node[3], u->node[4], u->node[5]);
+
+    if (*s == NULL && status != NULL)
+        *status = uuid_s_no_memory;
+}
+#endif
 
 struct ipc_transport *
 ipc_get_transport()
@@ -139,6 +189,12 @@ ipc_object_destroy(struct ipc_object *xo)
 	if (xo->xo_ipc_type == _IPC_TYPE_ARRAY)
 		ipc_array_destroy(xo);
 
+    if (xo->xo_ipc_type == _IPC_TYPE_STRING)
+        free(xo->xo_u.str);
+
+    if (xo->xo_ipc_type == _IPC_TYPE_DATA)
+        free((void *)xo->xo_u.ptr);
+    
 	free(xo);
 }
 
@@ -174,99 +230,89 @@ ipc_release(ipc_object_t obj)
 	ipc_object_destroy(xo);
 }
 
-char *
-ipc_copy_description(ipc_object_t obj)
+char * ipc_copy_description(ipc_object_t obj)
 {
-    
-    // TODO:
-//	char *result;
-//	struct sbuf *sbuf;
-//
-//	sbuf = sbuf_new_auto();
-//	ipc_copy_description_level(obj, sbuf, 0);
-//	sbuf_finish(sbuf);
-//	result = strdup(sbuf_data(sbuf));
-//	sbuf_delete(sbuf);
-//
-//	return (result);
-    return "";
+	char *result;
+	struct sbuf *sbuf;
+
+	sbuf = sbuf_new_auto();
+	ipc_copy_description_level(obj, sbuf, 0);
+	sbuf_finish(sbuf);
+	result = strdup(sbuf_data(sbuf));
+	sbuf_delete(sbuf);
+
+	return (result);
 }
 
-//static void
-//ipc_copy_description_level(ipc_object_t obj, struct sbuf *sbuf, int level)
-//{
-//	struct ipc_object *xo = obj;
-//	struct uuid *id;
-//	char *uuid_str;
-//	uint32_t uuid_status;
-//
-//	if (obj == NULL) {
-//		sbuf_printf(sbuf, "<null value>\n");
-//		return;
-//	}
-//
-//	sbuf_printf(sbuf, "(%s) ", _ipc_get_type_name(obj));
-//
-//	switch (xo->xo_ipc_type) {
-//	case _IPC_TYPE_DICTIONARY:
-//		sbuf_printf(sbuf, "\n");
-//		ipc_dictionary_apply(xo, ^(const char *k, ipc_object_t v) {
-//			sbuf_printf(sbuf, "%*s\"%s\": ", level * 4, " ", k);
-//			ipc_copy_description_level(v, sbuf, level + 1);
-//			return ((bool)true);
-//		});
-//		break;
-//
-//	case _IPC_TYPE_ARRAY:
-//		sbuf_printf(sbuf, "\n");
-//		ipc_array_apply(xo, ^(size_t idx, ipc_object_t v) {
-//			sbuf_printf(sbuf, "%*s%ld: ", level * 4, " ", idx);
-//			ipc_copy_description_level(v, sbuf, level + 1);
-//			return ((bool)true);
-//		});
-//		break;
-//
-//	case _IPC_TYPE_BOOL:
-//		sbuf_printf(sbuf, "%s\n",
-//		    ipc_bool_get_value(obj) ? "true" : "false");
-//		break;
-//
-//	case _IPC_TYPE_STRING:
-//		sbuf_printf(sbuf, "\"%s\"\n",
-//		    ipc_string_get_string_ptr(obj));
-//		break;
-//
-//	case _IPC_TYPE_INT64:
-//		sbuf_printf(sbuf, "%ld\n",
-//		    ipc_int64_get_value(obj));
-//		break;
-//
-//	case _IPC_TYPE_UINT64:
-//		sbuf_printf(sbuf, "%lx\n",
-//		    ipc_uint64_get_value(obj));
-//		break;
-//
-//	case _IPC_TYPE_DATE:
-//		sbuf_printf(sbuf, "%lu\n",
-//		    ipc_date_get_value(obj));
-//		break;
-//
-//	case _IPC_TYPE_UUID:
-//		id = (struct uuid *)ipc_uuid_get_bytes(obj);
-//		uuid_to_string(id, &uuid_str, &uuid_status);
-//		sbuf_printf(sbuf, "%s\n", uuid_str);
-//		free(uuid_str);
-//		break;
-//
-//	case _IPC_TYPE_ENDPOINT:
-//		sbuf_printf(sbuf, "<%ld>\n", xo->xo_int);
-//		break;
-//
-//	case _IPC_TYPE_NULL:
-//		sbuf_printf(sbuf, "<null>\n");
-//		break;
-//	}
-//}
+static void ipc_copy_description_level(ipc_object_t obj, struct sbuf *sbuf, int level)
+{
+	struct ipc_object *xo = obj;
+	struct uuid *id;
+	char *uuid_str;
+	uint32_t uuid_status;
+
+	if (obj == NULL) {
+		sbuf_printf(sbuf, "<null value>\n");
+		return;
+	}
+
+	sbuf_printf(sbuf, "(%s) ", _ipc_get_type_name(obj));
+
+	switch (xo->xo_ipc_type) {
+	case _IPC_TYPE_DICTIONARY:
+		sbuf_printf(sbuf, "\n");
+		ipc_dictionary_apply(xo, ^(const char *k, ipc_object_t v) {
+			sbuf_printf(sbuf, "%*s\"%s\": ", level * 4, " ", k);
+			ipc_copy_description_level(v, sbuf, level + 1);
+			return ((bool)true);
+		});
+		break;
+
+	case _IPC_TYPE_ARRAY:
+		sbuf_printf(sbuf, "\n");
+		ipc_array_apply(xo, ^(size_t idx, ipc_object_t v) {
+			sbuf_printf(sbuf, "%*s%ld: ", level * 4, " ", idx);
+			ipc_copy_description_level(v, sbuf, level + 1);
+			return ((bool)true);
+		});
+		break;
+
+	case _IPC_TYPE_BOOL:
+		sbuf_printf(sbuf, "%s\n", ipc_bool_get_value(obj) ? "true" : "false");
+		break;
+
+	case _IPC_TYPE_STRING:
+		sbuf_printf(sbuf, "\"%s\"\n", ipc_string_get_string_ptr(obj));
+		break;
+
+	case _IPC_TYPE_INT64:
+        sbuf_printf(sbuf, "%lld\n", ipc_int64_get_value(obj));
+		break;
+
+	case _IPC_TYPE_UINT64:
+        sbuf_printf(sbuf, "%llx\n", ipc_uint64_get_value(obj));
+		break;
+
+	case _IPC_TYPE_DATE:
+        sbuf_printf(sbuf, "%lld\n", ipc_date_get_value(obj));
+		break;
+
+	case _IPC_TYPE_UUID:
+		id = (struct uuid *)ipc_uuid_get_bytes(obj);
+		uuid_to_string(id, &uuid_str, &uuid_status);
+		sbuf_printf(sbuf, "%s\n", uuid_str);
+		free(uuid_str);
+		break;
+
+	case _IPC_TYPE_ENDPOINT:
+		sbuf_printf(sbuf, "<%lld>\n", xo->xo_int);
+		break;
+
+	case _IPC_TYPE_NULL:
+		sbuf_printf(sbuf, "<null>\n");
+		break;
+	}
+}
 
 int
 ipc_pipe_send(ipc_object_t xobj, uint64_t id, ipc_port_t local)

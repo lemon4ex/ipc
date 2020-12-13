@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C90747FE25864B7000CC88E6 /* sbuf.h in Headers */ = {isa = PBXBuildFile; fileRef = C90747FC25864B7000CC88E6 /* sbuf.h */; };
+		C90747FF25864B7000CC88E6 /* sbuf.c in Sources */ = {isa = PBXBuildFile; fileRef = C90747FD25864B7000CC88E6 /* sbuf.c */; };
 		C91D419F255DAA6D003A2A5F /* ipc.h in Headers */ = {isa = PBXBuildFile; fileRef = C91D419D255DAA6D003A2A5F /* ipc.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C91D41AF255DAAAF003A2A5F /* ipc_misc.c in Sources */ = {isa = PBXBuildFile; fileRef = C91D41A6255DAAAE003A2A5F /* ipc_misc.c */; };
 		C91D41B1255DAAAF003A2A5F /* ipc_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = C91D41A8255DAAAE003A2A5F /* ipc_internal.h */; };
@@ -53,6 +55,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C90747FC25864B7000CC88E6 /* sbuf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sbuf.h; sourceTree = "<group>"; };
+		C90747FD25864B7000CC88E6 /* sbuf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sbuf.c; sourceTree = "<group>"; };
 		C91D419A255DAA6D003A2A5F /* ipc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ipc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C91D419D255DAA6D003A2A5F /* ipc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ipc.h; sourceTree = "<group>"; };
 		C91D419E255DAA6D003A2A5F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -163,6 +167,8 @@
 				C91D423A255EDECD003A2A5F /* mpack-config.h */,
 				C91D423B255EDECD003A2A5F /* mpack.c */,
 				C91D4239255EDECD003A2A5F /* mpack.h */,
+				C90747FD25864B7000CC88E6 /* sbuf.c */,
+				C90747FC25864B7000CC88E6 /* sbuf.h */,
 				C9233CF62560440D00148EEE /* unix.c */,
 				C91D419E255DAA6D003A2A5F /* Info.plist */,
 			);
@@ -261,6 +267,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C91D423D255EDECE003A2A5F /* mpack-config.h in Headers */,
+				C90747FE25864B7000CC88E6 /* sbuf.h in Headers */,
 				C9233CEF25601B4400148EEE /* ipc_array.h in Headers */,
 				C9233CF125601BE000148EEE /* ipc_dictionary.h in Headers */,
 				C95A8E9E25839EC2005A693F /* base.h in Headers */,
@@ -446,6 +453,7 @@
 				C9233CF72560440D00148EEE /* unix.c in Sources */,
 				C91D41B3255DAAAF003A2A5F /* ipc_type.c in Sources */,
 				C91D423E255EDECE003A2A5F /* mpack.c in Sources */,
+				C90747FF25864B7000CC88E6 /* sbuf.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
