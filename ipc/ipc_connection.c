@@ -41,6 +41,7 @@
 #include "ipc_dictionary.h"
 
 static void ipc_send(ipc_connection_t xconn, ipc_object_t message, uint64_t id);
+static void ipc_connection_dispatch_callback(struct ipc_connection *conn, ipc_object_t result, uint64_t id);
 
 ipc_connection_t
 ipc_connection_create(dispatch_queue_t targetq)
@@ -363,8 +364,7 @@ ipc_connection_destroy_peer(void *context)
 }
 
 static void
-ipc_connection_dispatch_callback(struct ipc_connection *conn,
-    ipc_object_t result, uint64_t id)
+ipc_connection_dispatch_callback(struct ipc_connection *conn, ipc_object_t result, uint64_t id)
 {
 	struct ipc_pending_call *call;
 	TAILQ_FOREACH(call, &conn->xc_pending, xp_link) {
