@@ -5,7 +5,7 @@ The re-engraved version of the Apple XPC service is mainly used for inter-proces
 
 ## Features 
 1. Re-engraving the XPC interface makes it easy for developers to get started.
-2. Support cross-device multi-threaded communication, XPC only supports native inter-process communication. 
+2. Support cross-device multi-process communication, XPC only supports native inter-process communication. 
 
 ## Usage scenario 
 1. I don't want to use XPC communication. 
