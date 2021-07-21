@@ -14,7 +14,6 @@ FOUNDATION_EXPORT double ipcVersionNumber;
 //! Project version string for ipc.
 FOUNDATION_EXPORT const unsigned char ipcVersionString[];
 
-// In this header, you should import all the public headers of your framework using statements like #import <ipc/PublicHeader.h>
 #import <ipc/base.h>
 #import <ipc/ipc_connection.h>
 #import <ipc/ipc_array.h>

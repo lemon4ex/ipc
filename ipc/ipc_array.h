@@ -1,6 +1,6 @@
 //
 //  ipc_array.h
-//  xpc_lite
+//  ipc
 //
 //  Created by h4ck on 2020/11/14.
 //  Copyright © 2020 猿码工作室（https://ymlab.net）. All rights reserved.

@@ -35,6 +35,7 @@
 		C9233CF32560386C00148EEE /* ipc_connection.h in Headers */ = {isa = PBXBuildFile; fileRef = C9233CF22560386C00148EEE /* ipc_connection.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		C9233CF72560440D00148EEE /* unix.c in Sources */ = {isa = PBXBuildFile; fileRef = C9233CF62560440D00148EEE /* unix.c */; };
 		C95A8E9E25839EC2005A693F /* base.h in Headers */ = {isa = PBXBuildFile; fileRef = C95A8E9D25839EC2005A693F /* base.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		C98EC68326A7C13D00845C3F /* unix.h in Headers */ = {isa = PBXBuildFile; fileRef = C98EC68226A7C13C00845C3F /* unix.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -99,6 +100,7 @@
 		C9233CF22560386C00148EEE /* ipc_connection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ipc_connection.h; sourceTree = "<group>"; };
 		C9233CF62560440D00148EEE /* unix.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = unix.c; sourceTree = "<group>"; };
 		C95A8E9D25839EC2005A693F /* base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = base.h; sourceTree = "<group>"; };
+		C98EC68226A7C13C00845C3F /* unix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unix.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -170,6 +172,7 @@
 				C90747FD25864B7000CC88E6 /* sbuf.c */,
 				C90747FC25864B7000CC88E6 /* sbuf.h */,
 				C9233CF62560440D00148EEE /* unix.c */,
+				C98EC68226A7C13C00845C3F /* unix.h */,
 				C91D419E255DAA6D003A2A5F /* Info.plist */,
 			);
 			path = ipc;
@@ -266,6 +269,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C98EC68326A7C13D00845C3F /* unix.h in Headers */,
 				C91D423D255EDECE003A2A5F /* mpack-config.h in Headers */,
 				C90747FE25864B7000CC88E6 /* sbuf.h in Headers */,
 				C9233CEF25601B4400148EEE /* ipc_array.h in Headers */,

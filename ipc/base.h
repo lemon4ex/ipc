@@ -28,11 +28,6 @@ __BEGIN_DECLS
 #define IPC_DECL(name) typedef struct _##name##_s * name##_t
 #define IPC_GLOBAL_OBJECT(object) (&(object))
 
-
-/*!
- * @typedef ipc_type_t
- * A type that describes XPC object types.
- */
 typedef const struct _ipc_type_s * ipc_type_t;
 #define IPC_TYPE(type) const struct _ipc_type_s type
 
@@ -40,17 +35,9 @@ typedef void * ipc_object_t;
 
 typedef void (^ipc_handler_t)(ipc_object_t object);
 
-//#define IPC_TYPE_CONNECTION (&_ipc_type_connection)
-
-//IPC_EXPORT IPC_TYPE(_ipc_type_connection);
 IPC_DECL(ipc_connection);
 
 typedef void (*ipc_connection_handler_t)(ipc_connection_t connection);
-
-//#define IPC_TYPE_ENDPOINT (&_ipc_type_endpoint)
-
-//IPC_EXPORT IPC_TYPE(_ipc_type_endpoint);
-//IPC_DECL(ipc_endpoint);
 
 #define IPC_TYPE_NULL (&_ipc_type_null)
 IPC_EXPORT IPC_TYPE(_ipc_type_null);
@@ -59,73 +46,42 @@ IPC_EXPORT IPC_TYPE(_ipc_type_null);
 IPC_EXPORT IPC_TYPE(_ipc_type_bool);
 
 #define IPC_BOOL_TRUE IPC_GLOBAL_OBJECT(_ipc_bool_true)
-
 IPC_EXPORT const struct _ipc_bool_s _ipc_bool_true;
 
 #define IPC_BOOL_FALSE IPC_GLOBAL_OBJECT(_ipc_bool_false)
-
 IPC_EXPORT const struct _ipc_bool_s _ipc_bool_false;
 
 #define IPC_TYPE_INT64 (&_ipc_type_int64)
-
 IPC_EXPORT IPC_TYPE(_ipc_type_int64);
 
 #define IPC_TYPE_UINT64 (&_ipc_type_uint64)
-
 IPC_EXPORT IPC_TYPE(_ipc_type_uint64);
 
 #define IPC_TYPE_DOUBLE (&_ipc_type_double)
-
 IPC_EXPORT IPC_TYPE(_ipc_type_double);
 
 #define IPC_TYPE_DATE (&_ipc_type_date)
-
 IPC_EXPORT IPC_TYPE(_ipc_type_date);
 
 #define IPC_TYPE_DATA (&_ipc_type_data)
-
 IPC_EXPORT IPC_TYPE(_ipc_type_data);
 
 #define IPC_TYPE_STRING (&_ipc_type_string)
-
 IPC_EXPORT IPC_TYPE(_ipc_type_string);
 
 #define IPC_TYPE_UUID (&_ipc_type_uuid)
-
 IPC_EXPORT IPC_TYPE(_ipc_type_uuid);
-
-//#define IPC_TYPE_FD (&_ipc_type_fd)
-
-//IPC_EXPORT IPC_TYPE(_ipc_type_fd);
-
-/*!
- * @define IPC_TYPE_SHMEM
- * A type representing a region of shared memory.
- */
-//#define IPC_TYPE_SHMEM (&_ipc_type_shmem)
-//IPC_EXPORT IPC_TYPE(_ipc_type_shmem);
 
 #define IPC_TYPE_ARRAY (&_ipc_type_array)
 IPC_EXPORT IPC_TYPE(_ipc_type_array);
 
 #define IPC_TYPE_DICTIONARY (&_ipc_type_dictionary)
-
 IPC_EXPORT IPC_TYPE(_ipc_type_dictionary);
 
 #define IPC_TYPE_ERROR (&_ipc_type_error)
-
 IPC_EXPORT IPC_TYPE(_ipc_type_error);
 
-
-//#define IPC_ERROR_KEY_DESCRIPTION _ipc_error_key_description
-//
-//const char *const _ipc_error_key_description;
-
-//#define IPC_EVENT_KEY_NAME _ipc_event_key_name
-//
-//const char *const _ipc_event_key_name;
-
-#pragma mark XPC Object Protocol
+#pragma mark IPC Object Protocol
 
 ipc_object_t ipc_retain(ipc_object_t object);
 
@@ -139,9 +95,9 @@ bool ipc_equal(ipc_object_t object1, ipc_object_t object2);
 
 size_t ipc_hash(ipc_object_t object);
 
-char * ipc_copy_description(ipc_object_t object);
+char *ipc_copy_description(ipc_object_t object);
 
-#pragma mark XPC Object Types
+#pragma mark IPC Object Types
 #pragma mark Null
 
 ipc_object_t ipc_null_create(void);
@@ -189,6 +145,8 @@ const void * ipc_data_get_bytes_ptr(ipc_object_t xdata);
 size_t ipc_data_get_bytes(ipc_object_t xdata, void *buffer, size_t off, size_t length);
 
 #pragma mark String
+
+ipc_object_t ipc_error_create(const void *event);
 
 ipc_object_t ipc_string_create(const char *string);
 

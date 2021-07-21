@@ -1,6 +1,6 @@
 //
 //  ipc_connection.h
-//  xpc_lite
+//  ipc
 //
 //  Created by h4ck on 2020/11/15.
 //  Copyright © 2020 猿码工作室（https://ymlab.net）. All rights reserved.
@@ -13,17 +13,9 @@
 
 __BEGIN_DECLS
 
-#define IPC_ERROR_CONNECTION_INTERRUPTED \
-    IPC_GLOBAL_OBJECT(_ipc_error_connection_interrupted)
-IPC_EXPORT const struct _ipc_dictionary_s _ipc_error_connection_interrupted;
-
 #define IPC_ERROR_CONNECTION_INVALID \
     IPC_GLOBAL_OBJECT(_ipc_error_connection_invalid)
-IPC_EXPORT const struct ipc_object _ipc_error_connection_invalid;
-
-#define IPC_ERROR_TERMINATION_IMMINENT \
-    IPC_GLOBAL_OBJECT(_ipc_error_termination_imminent)
-IPC_EXPORT const struct _ipc_dictionary_s _ipc_error_termination_imminent;
+IPC_EXPORT const struct _ipc_dictionary_s _ipc_error_connection_invalid;
 
 #define IPC_CONNECTION_CLIENT (0)
 #define IPC_CONNECTION_LISTENER (1 << 0)
