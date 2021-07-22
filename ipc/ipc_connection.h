@@ -24,9 +24,9 @@ typedef void (*ipc_finalizer_t)(void *value);
 
 ipc_connection_t ipc_connection_create(dispatch_queue_t targetq);
 
-ipc_connection_t ipc_connection_create_uds_service(const char *path, dispatch_queue_t targetq, uint64_t flags);
+ipc_connection_t ipc_connection_create_domain_socket_service(const char *path, dispatch_queue_t targetq, uint64_t flags);
 
-ipc_connection_t ipc_connection_create_tcp_service(const char *ip, uint16_t port, dispatch_queue_t targetq, uint64_t flags);
+ipc_connection_t ipc_connection_create_socket_service(const char *ip, uint16_t port, dispatch_queue_t targetq, uint64_t flags);
 
 void ipc_connection_set_target_queue(ipc_connection_t connection, dispatch_queue_t targetq);
 

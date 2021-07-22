@@ -49,23 +49,26 @@ int unix_tcp_listen(const char *ip, uint16_t port, ipc_port_t *fd) {
     inet_aton(ip, &addr.sin_addr);
     addr.sin_port = htons(port);
     
-    int ret = socket(AF_INET, SOCK_STREAM, 0);
-    if (ret == -1) {
+    int listenfd = socket(AF_INET, SOCK_STREAM, 0);
+    int reuse = 1;
+    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR,(const void *)&reuse , sizeof(reuse));
+    
+    if (listenfd == -1) {
         debugf("create socket failed: %s", strerror(errno));
         return (-1);
     }
     
-    if (bind(ret, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
+    if (bind(listenfd, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
         debugf("bind failed: %s", strerror(errno));
         return (-1);
     }
     
-    if (listen(ret, 5) != 0) {
+    if (listen(listenfd, 5) != 0) {
         debugf("listen failed: %s", strerror(errno));
         return (-1);
     }
     
-    *fd = (ipc_port_t)(long)ret;
+    *fd = (ipc_port_t)(long)listenfd;
     return (0);
 }
 

@@ -25,8 +25,7 @@
 static void ipc_send(ipc_connection_t xconn, ipc_object_t message, uint64_t id);
 static void ipc_connection_dispatch_callback(struct ipc_connection *conn, ipc_object_t result, uint64_t id);
 
-ipc_connection_t
-ipc_connection_create(dispatch_queue_t targetq)
+ipc_connection_t ipc_connection_create(dispatch_queue_t targetq)
 {
 	char *qname;
 	struct ipc_connection *conn;
@@ -57,7 +56,7 @@ ipc_connection_create(dispatch_queue_t targetq)
 	return ((ipc_connection_t)conn);
 }
 
-ipc_connection_t ipc_connection_create_uds_service(const char *path, dispatch_queue_t targetq, uint64_t flags)
+ipc_connection_t ipc_connection_create_domain_socket_service(const char *path, dispatch_queue_t targetq, uint64_t flags)
 {
 	struct ipc_connection *conn = (struct ipc_connection *)ipc_connection_create(targetq);
 	if (conn == NULL)
@@ -87,7 +86,7 @@ ipc_connection_t ipc_connection_create_uds_service(const char *path, dispatch_qu
 	return ((ipc_connection_t)conn);
 }
 
-ipc_connection_t ipc_connection_create_tcp_service(const char *ip, uint16_t port, dispatch_queue_t targetq, uint64_t flags)
+ipc_connection_t ipc_connection_create_socket_service(const char *ip, uint16_t port, dispatch_queue_t targetq, uint64_t flags)
 {
 	struct ipc_connection *conn = (struct ipc_connection *)ipc_connection_create(targetq);
 	if (conn == NULL)
